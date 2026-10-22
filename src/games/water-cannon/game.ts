@@ -244,7 +244,10 @@ export const waterCannon: CarnivalGame = {
       onPress();
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.code !== 'Space') return;
+      if (event.code !== 'Space' || event.ctrlKey || event.altKey || event.metaKey) return;
+      // Leave Space alone when a link or other control on the page has focus.
+      const target = event.target;
+      if (target instanceof Element && target.closest('a, button, input, select, textarea')) return;
       // Keep Space from scrolling the page, and fire once per press.
       event.preventDefault();
       if (!event.repeat) onPress();
