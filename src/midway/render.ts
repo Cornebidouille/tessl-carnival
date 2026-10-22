@@ -1,5 +1,5 @@
 import { canvasFont, theme } from '../carnival';
-import { palette } from './palette';
+import { palette, type DayLook } from './palette';
 import {
   CART_KINDS,
   toScreen,
@@ -254,8 +254,8 @@ export function groundBounds(map: MidwayMap): Box {
 }
 
 /** The open field round the midway, filling the view from the horizon down. */
-export function drawField(ctx: Ctx, view: Box) {
-  ctx.fillStyle = palette.haze;
+export function drawField(ctx: Ctx, view: Box, look: DayLook) {
+  ctx.fillStyle = look.haze;
   ctx.fillRect(view.left, HORIZON, view.right - view.left, 6);
   ctx.fillStyle = palette.grass;
   ctx.fillRect(view.left, HORIZON + 6, view.right - view.left, Math.max(0, view.bottom - HORIZON));
@@ -1240,18 +1240,29 @@ export function drawBunting(ctx: Ctx, map: MidwayMap, t: number, view: Box) {
   map.bunting.forEach(([a, b], n) => {
     const p = at(a.x + 0.5, a.y + 0.5, POLE_HEIGHT - 2);
     const q = at(b.x + 0.5, b.y + 0.5, POLE_HEIGHT - 2);
-    if (Math.max(p[0], q[0]) < view.left || Math.min(p[0], q[0]) > view.right) return;
-    if (Math.max(p[1], q[1]) + 20 < view.top || Math.min(p[1], q[1]) > view.bottom) return;
-    const sag = Math.hypot(q[0] - p[0], q[1] - p[1]) * 0.12;
-    const points: Pt[] = [];
-    const count = 12;
-    for (let i = 0; i <= count; i++) {
-      const s = i / count;
-      points.push([lerp(p[0], q[0], s), lerp(p[1], q[1], s) + 4 * sag * s * (1 - s)]);
-    }
+    if (!buntingInView(p, q, view)) return;
+    const points = buntingLine(p, q);
     stroke(ctx, points, palette.woodDark, 0.6);
     flags(ctx, points, t, 4, n);
   });
+}
+
+/** Whether a string of bunting between `p` and `q`, sag included, can reach the view. */
+function buntingInView(p: Pt, q: Pt, view: Box) {
+  if (Math.max(p[0], q[0]) < view.left || Math.min(p[0], q[0]) > view.right) return false;
+  return !(Math.max(p[1], q[1]) + 20 < view.top || Math.min(p[1], q[1]) > view.bottom);
+}
+
+/** Screen points along a string of bunting, sagging between its two ends. */
+function buntingLine(p: Pt, q: Pt): Pt[] {
+  const sag = Math.hypot(q[0] - p[0], q[1] - p[1]) * 0.12;
+  const points: Pt[] = [];
+  const count = 12;
+  for (let i = 0; i <= count; i++) {
+    const s = i / count;
+    points.push([lerp(p[0], q[0], s), lerp(p[1], q[1], s) + 4 * sag * s * (1 - s)]);
+  }
+  return points;
 }
 
 function ferrisWheel(ctx: Ctx, prop: Prop, t: number) {
@@ -1693,18 +1704,36 @@ export interface Cloud {
   speed: number;
 }
 
-export function drawCloud(ctx: Ctx, x: number, y: number, size: number) {
-  ctx.fillStyle = palette.cloud;
+export function drawCloud(ctx: Ctx, x: number, y: number, size: number, look: DayLook) {
+  ctx.fillStyle = look.cloud;
   ctx.beginPath();
   ctx.roundRect(x - 30 * size, y - 8 * size, 60 * size, 12 * size, 6 * size);
   ctx.arc(x - 14 * size, y - 8 * size, 11 * size, 0, Math.PI * 2);
   ctx.arc(x + 4 * size, y - 13 * size, 15 * size, 0, Math.PI * 2);
   ctx.arc(x + 20 * size, y - 6 * size, 9 * size, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = palette.cloudShade;
+  ctx.fillStyle = look.cloudShade;
   ctx.beginPath();
   ctx.roundRect(x - 30 * size, y, 60 * size, 4 * size, 2 * size);
   ctx.fill();
+}
+
+/**
+ * A few stars, fixed in the sky across a `width` by `height` screen area
+ * that ends at the horizon. `brightness` runs from 0 (none) to 1.
+ */
+export function drawStars(ctx: Ctx, width: number, horizon: number, brightness: number) {
+  if (brightness <= 0) return;
+  ctx.fillStyle = palette.star;
+  for (let i = 0; i < 60; i++) {
+    const x = hash(i, 3) * width;
+    const y = horizon - 20 - hash(i, 4) * 600;
+    if (y < 0) continue;
+    ctx.globalAlpha = brightness * (0.4 + hash(i, 5) * 0.6);
+    const size = hash(i, 6) > 0.85 ? 2 : 1.2;
+    ctx.fillRect(x, y, size, size);
+  }
+  ctx.globalAlpha = 1;
 }
 
 export interface Floater {
@@ -1729,6 +1758,72 @@ export function drawFloaters(ctx: Ctx, floaters: readonly Floater[]) {
     oval(ctx, f.x + sway - 1.8, f.y - 2.5, 1.4, 2, 'rgba(255,255,255,0.6)');
   }
   ctx.globalAlpha = 1;
+}
+
+// ── Lights after dark ─────────────────────────────────────────────────────
+
+/** Where each lit prop glows, as a height off the ground and a radius, in world pixels. */
+const PROP_GLOWS: Partial<Record<Prop['kind'], { z: number; r: number }>> = {
+  'big-top': { z: 40, r: 80 },
+  'round-tent': { z: 30, r: 56 },
+  'peaked-tent': { z: 22, r: 48 },
+  'ferris-wheel': { z: 76, r: 90 },
+  carousel: { z: 30, r: 64 },
+  cart: { z: 18, r: 28 },
+  'ticket-booth': { z: 20, r: 30 },
+  billboard: { z: BILLBOARD_HEIGHT, r: 60 },
+};
+
+function glow(ctx: Ctx, x: number, y: number, r: number) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, palette.glow);
+  g.addColorStop(1, palette.glowEdge);
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
+/**
+ * Lights the open booths, the tents, the rides, the gate and the bunting,
+ * adding a warm glow on top of what's drawn. `brightness` runs from 0 (off)
+ * to 1, and anything outside `view` is skipped.
+ */
+export function drawLights(ctx: Ctx, map: MidwayMap, brightness: number, t: number, view: Box) {
+  if (brightness <= 0) return;
+  const seen = (x: number, y: number, r: number) =>
+    x + r > view.left && x - r < view.right && y + r > view.top && y - r < view.bottom;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = brightness * 0.45;
+  for (const slot of map.booths) {
+    if (!slot.gameId) continue;
+    const [x, y] = at(slot.x + 1, slot.y + 1, 20);
+    if (seen(x, y, 44)) glow(ctx, x, y, 44);
+  }
+  for (const prop of map.props) {
+    const lit = PROP_GLOWS[prop.kind];
+    if (!lit) continue;
+    const [x, y] = at(prop.x + prop.w / 2, prop.y + prop.h / 2, lit.z);
+    if (seen(x, y, lit.r)) glow(ctx, x, y, lit.r);
+  }
+  const gate = at(map.avenueX + (ARCH_LEFT + ARCH_RIGHT) / 2, map.height - 0.75, ARCH_HEIGHT);
+  if (seen(gate[0], gate[1], 60)) glow(ctx, gate[0], gate[1], 60);
+
+  // A bulb at every flag along the bunting, twinkling a little.
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = palette.bulb;
+  map.bunting.forEach(([a, b], n) => {
+    const p = at(a.x + 0.5, a.y + 0.5, POLE_HEIGHT - 2);
+    const q = at(b.x + 0.5, b.y + 0.5, POLE_HEIGHT - 2);
+    if (!buntingInView(p, q, view)) return;
+    buntingLine(p, q).forEach(([x, y], i) => {
+      if (!seen(x, y, 2)) return;
+      ctx.globalAlpha = brightness * (Math.sin(t * 3 + i + n) > -0.6 ? 1 : 0.5);
+      ctx.beginPath();
+      ctx.arc(x, y, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+  ctx.restore();
 }
 
 // ── Everything else ───────────────────────────────────────────────────────
