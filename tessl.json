@@ -331,13 +331,5 @@
         }
       }
     }
-  },
-  "schedules": {
-    "doc-gardening-weekly": {
-      "cron": "0 7 * * 1",
-      "timezone": "Europe/London",
-      "description": "Every Monday at 07:00 London time, check the docs against the code",
-      "action": "doc-gardening"
-    }
   }
 }
