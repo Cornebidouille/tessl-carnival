@@ -9,9 +9,9 @@ Review changes under `src/games/` for whether each game still plugs into the car
 
 ## Scope
 
-- **Registering on the midway** A game the midway cannot launch, or launches some other way: a game that does not export its `CarnivalGame` from `src/games/<game-id>/game.ts`, is reached through anything but the list in `src/games/index.ts`, or computes its `id` instead of stating the one its folder is named after.
+- **Registering on the midway** A game the midway cannot launch, or launches some other way: a game that does not export its `CarnivalGame` from `src/games/<game-id>/game.ts`, or is reached through anything but the list in `src/games/index.ts`.
 - **Reporting scores** A score the carnival's score board never sees, sees twice, or sees under the wrong name: a round that ends without one `recordScore(<game>.id, score)` call from `src/carnival`, a call that can run again for the same round (per hit, per frame, on every redraw of the game over screen), an id written as a string that can drift from the game's `id`, or a game that reads or writes browser storage itself or keeps its own best score or high score table.
-- **Drawing with the theme** A game that will stop matching the midway when the theme changes: a colour written as a hex, `rgb()`, `hsl()` or named CSS colour, a font written as a string, or a font size or canvas size that restates a value `theme` already has, where `theme` and `canvasFont` from `src/carnival/theme.ts` should be used.
+- **Drawing with the theme** A game that will stop matching the midway when the theme changes: a colour written as a literal in any CSS colour form (hex, a named colour, or a function such as `rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()` or `color()`), a font written as a string, or a font size or canvas size that restates a value `theme` already has, where `theme` and `canvasFont` from `src/carnival/theme.ts` should be used.
 
 ## Method
 
