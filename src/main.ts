@@ -1,23 +1,37 @@
 import './style.css';
-import { applyTheme, bestScore, type CarnivalGame } from './carnival';
+import { applyTheme, bestScore, currentCarnivalTime, type CarnivalGame } from './carnival';
 import { registry } from './games';
 import { startMidway } from './midway/midway';
 import type { BoothSlot } from './midway/world';
+import {
+  CLOSED_MESSAGE,
+  boothHoursNote,
+  canStartGame,
+  clockLabel,
+  openingState,
+} from './opening-hours';
 
 applyTheme();
 
 const app = document.querySelector<HTMLElement>('#app')!;
 let stop: (() => void) | undefined;
 
+/** How often the midway clock and the booth card check the carnival time. One carnival minute is about 0.2 real seconds. */
+const CLOCK_TICK_MS = 200;
+/** How long the closed message stays up. */
+const NOTICE_MS = 4000;
+
 function bestText(game: CarnivalGame): string {
   const best = bestScore(game.id);
   return best === undefined ? 'No scores yet' : `Best: ${best}`;
 }
 
-function renderMidway() {
+function renderMidway(notice?: string) {
   document.body.dataset.view = 'midway';
   app.innerHTML = `
     <section class="midway">
+      <p class="midway-clock" aria-label="Carnival time"></p>
+      <p class="midway-notice" role="status" hidden></p>
       <canvas class="midway-map" aria-label="The carnival midway. Walk up to a booth to play its game."></canvas>
       <p class="midway-help">
         <kbd>WASD</kbd> or <kbd>arrows</kbd> to walk, or click where you want to go.
@@ -38,6 +52,7 @@ function renderMidway() {
         <p class="description"></p>
         <p class="best"></p>
         <a class="play">Play</a>
+        <p class="hours"></p>
       </div>
     </section>`;
 
@@ -50,8 +65,28 @@ function renderMidway() {
     guide.append(item);
   }
 
+  const noticeEl = app.querySelector<HTMLElement>('.midway-notice')!;
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+  const showNotice = (text: string) => {
+    noticeEl.textContent = text;
+    noticeEl.hidden = false;
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => (noticeEl.hidden = true), NOTICE_MS);
+  };
+  if (notice) showNotice(notice);
+
+  // While closed, the booth links stay on the midway instead of starting a game.
+  guide.addEventListener('click', (event) => {
+    if (!(event.target as Element).closest('a') || canStartGame(currentCarnivalTime())) return;
+    event.preventDefault();
+    showNotice(CLOSED_MESSAGE);
+  });
+
   const card = app.querySelector<HTMLElement>('.booth-card')!;
+  let reached: BoothSlot | undefined;
+  let state = openingState(currentCarnivalTime());
   const showBooth = (booth: BoothSlot | undefined) => {
+    reached = booth;
     const game = booth?.gameId ? registry.get(booth.gameId) : undefined;
     card.hidden = booth === undefined;
     card.classList.toggle('closed', booth !== undefined && !game);
@@ -60,16 +95,36 @@ function renderMidway() {
       game?.description ?? 'This booth is waiting for a game. Build one and it opens here.';
     card.querySelector('.best')!.textContent = game ? bestText(game) : '';
     const link = card.querySelector<HTMLAnchorElement>('.play')!;
-    link.hidden = !game;
+    link.hidden = !game || state === 'closed';
     if (game) link.href = `#/play/${game.id}`;
+    card.querySelector('.hours')!.textContent = game ? boothHoursNote(state) : '';
   };
+
+  const clock = app.querySelector<HTMLElement>('.midway-clock')!;
+  const tick = () => {
+    const time = currentCarnivalTime();
+    clock.textContent = clockLabel(time);
+    const next = openingState(time);
+    if (next !== state) {
+      state = next;
+      showBooth(reached);
+    }
+  };
+  tick();
+  const clockTimer = setInterval(tick, CLOCK_TICK_MS);
 
   const midway = startMidway(app.querySelector('canvas')!, {
     games: registry.all(),
-    onPlay: (gameId) => (location.hash = `#/play/${gameId}`),
+    onPlay: (gameId) => {
+      if (canStartGame(currentCarnivalTime())) location.hash = `#/play/${gameId}`;
+    },
     onReach: showBooth,
   });
-  stop = midway.stop;
+  stop = () => {
+    midway.stop();
+    clearInterval(clockTimer);
+    clearTimeout(noticeTimer);
+  };
 }
 
 function renderGame(game: CarnivalGame) {
@@ -92,8 +147,13 @@ function route() {
 
   const match = location.hash.match(/^#\/play\/([\w-]+)$/);
   const game = match ? registry.get(match[1]) : undefined;
-  if (game) renderGame(game);
-  else renderMidway();
+  if (!game) renderMidway();
+  else if (canStartGame(currentCarnivalTime())) renderGame(game);
+  else {
+    // A game's link opened while closed goes back to the midway. A round already running is left to finish.
+    history.replaceState(null, '', '#/');
+    renderMidway(CLOSED_MESSAGE);
+  }
 }
 
 window.addEventListener('hashchange', route);
