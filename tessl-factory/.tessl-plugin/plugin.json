@@ -1,0 +1,7 @@
+{
+  "name": "ws-01a1639215b37585bbb0f7c3b960423f/tessl-carnival-factory",
+  "version": "0.1.0",
+  "description": "The carnival's own factory skills: scheduled maintenance loops that file issues.",
+  "private": true,
+  "skills": ["./skills/doc-gardening"]
+}

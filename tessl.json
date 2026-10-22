@@ -16,19 +16,41 @@
       "skill": "tessl-labs/factory#implement-github-issue",
       "environment": "tessl-carnival-factory",
       "agent": "claude",
-      "model": "claude-opus-5-5"
+      "model": "claude-opus-5-5",
+      "tags": [
+        "delivery"
+      ],
+      "description": "Ship a labelled GitHub issue as one pull request"
     },
     "shepherd": {
       "skill": "tessl-labs/factory#shepherd",
       "environment": "tessl-carnival-factory",
       "agent": "claude",
-      "model": "claude-opus-5-5"
+      "model": "claude-opus-5-5",
+      "tags": [
+        "delivery"
+      ],
+      "description": "Answer reviews and fix checks on Tessl's pull requests"
     },
     "follow-ticket-changes": {
       "skill": "tessl-labs/factory#follow-ticket-changes",
       "environment": "tessl-carnival-factory",
       "agent": "codex",
-      "model": "gpt-6-luna"
+      "model": "gpt-6-luna",
+      "tags": [
+        "bookkeeping"
+      ],
+      "description": "Keep Tessl's runs and pull requests in step with what people do to issues"
+    },
+    "doc-gardening": {
+      "skill": "file:tessl-factory#doc-gardening",
+      "environment": "tessl-carnival-factory",
+      "agent": "claude",
+      "model": "claude-opus-5-5",
+      "tags": [
+        "maintenance"
+      ],
+      "description": "File one issue per doc or agent instruction that no longer matches the code"
     }
   },
   "triggers": {
@@ -308,6 +330,14 @@
           "TICKET_CHANGE": "pr-closed"
         }
       }
+    }
+  },
+  "schedules": {
+    "doc-gardening-weekly": {
+      "cron": "0 7 * * 1",
+      "timezone": "Europe/London",
+      "description": "Every Monday at 07:00 London time, check the docs against the code",
+      "action": "doc-gardening"
     }
   }
 }
