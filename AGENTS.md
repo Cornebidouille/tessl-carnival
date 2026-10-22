@@ -35,6 +35,8 @@ WORKSHOP.md               the workshop, module by module
 docs/midway.jpg           the screenshot at the top of the README
 docs/social-preview.jpg   the 1280x640 image for link previews and GitHub's social preview
 tessl-factory/skills/     sample skills for maintenance loops
+.tessl-code-review.yml    which review lenses Tessl Code Review runs
+review-lenses/            those lenses: the default four, copied, and the house rules
 src/
   main.ts                 the router (#/play/<game-id>) and the midway's overlay
   midway/                 the walkable midway map

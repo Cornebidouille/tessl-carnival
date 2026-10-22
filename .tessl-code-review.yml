@@ -1,0 +1,26 @@
+# Tessl Code Review profile. The Tessl Review app reads this file from main.
+# The first four lenses are copies of the tessl/code-review@0.5.0 defaults,
+# kept in review-lenses/ so they can be tuned here. The last one checks game
+# code against the first three house rules in AGENTS.md: registering on the
+# midway, reporting scores, and drawing with the theme.
+schemaVersion: 1
+# Only what tessl install writes: installed plugins, and each agent's links
+# to their skills. A link is one path, so name it as well as its contents.
+ignore:
+  - .tessl/plugins/**
+  - .agents/skills/tessl__*
+  - .agents/skills/tessl__*/**
+  - .claude/skills/tessl__*
+  - .claude/skills/tessl__*/**
+  - .codex/skills/tessl__*
+  - .codex/skills/tessl__*/**
+  - .cursor/skills/tessl__*
+  - .cursor/skills/tessl__*/**
+lenses:
+  - ref: ./review-lenses/review-correctness-and-data-integrity/SKILL.md
+  - ref: ./review-lenses/review-security-and-privacy/SKILL.md
+  - ref: ./review-lenses/review-scale-and-resilience/SKILL.md
+  - ref: ./review-lenses/review-maintainability-and-code-quality/SKILL.md
+  - ref: ./review-lenses/review-carnival-house-rules/SKILL.md
+    globs:
+      - src/games/**
