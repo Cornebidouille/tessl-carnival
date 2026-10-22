@@ -1240,12 +1240,17 @@ export function drawBunting(ctx: Ctx, map: MidwayMap, t: number, view: Box) {
   map.bunting.forEach(([a, b], n) => {
     const p = at(a.x + 0.5, a.y + 0.5, POLE_HEIGHT - 2);
     const q = at(b.x + 0.5, b.y + 0.5, POLE_HEIGHT - 2);
-    if (Math.max(p[0], q[0]) < view.left || Math.min(p[0], q[0]) > view.right) return;
-    if (Math.max(p[1], q[1]) + 20 < view.top || Math.min(p[1], q[1]) > view.bottom) return;
+    if (!buntingInView(p, q, view)) return;
     const points = buntingLine(p, q);
     stroke(ctx, points, palette.woodDark, 0.6);
     flags(ctx, points, t, 4, n);
   });
+}
+
+/** Whether a string of bunting between `p` and `q`, sag included, can reach the view. */
+function buntingInView(p: Pt, q: Pt, view: Box) {
+  if (Math.max(p[0], q[0]) < view.left || Math.min(p[0], q[0]) > view.right) return false;
+  return !(Math.max(p[1], q[1]) + 20 < view.top || Math.min(p[1], q[1]) > view.bottom);
 }
 
 /** Screen points along a string of bunting, sagging between its two ends. */
@@ -1807,11 +1812,10 @@ export function drawLights(ctx: Ctx, map: MidwayMap, brightness: number, t: numb
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = palette.bulb;
   map.bunting.forEach(([a, b], n) => {
-    const points = buntingLine(
-      at(a.x + 0.5, a.y + 0.5, POLE_HEIGHT - 2),
-      at(b.x + 0.5, b.y + 0.5, POLE_HEIGHT - 2),
-    );
-    points.forEach(([x, y], i) => {
+    const p = at(a.x + 0.5, a.y + 0.5, POLE_HEIGHT - 2);
+    const q = at(b.x + 0.5, b.y + 0.5, POLE_HEIGHT - 2);
+    if (!buntingInView(p, q, view)) return;
+    buntingLine(p, q).forEach(([x, y], i) => {
       if (!seen(x, y, 2)) return;
       ctx.globalAlpha = brightness * (Math.sin(t * 3 + i + n) > -0.6 ? 1 : 0.5);
       ctx.beginPath();
