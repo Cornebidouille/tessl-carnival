@@ -1,3 +1,5 @@
+import { currentCarnivalTime } from '../carnival';
+import { dayLookAt } from './daylight';
 import { palette } from './palette';
 import {
   archBounds,
@@ -11,7 +13,9 @@ import {
   drawFrontHedge,
   drawField,
   drawGroundLayer,
+  drawLights,
   drawProp,
+  drawStars,
   drawWalker,
   groundBounds,
   HORIZON,
@@ -261,32 +265,16 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
   };
 
   const draw = (t: number) => {
-    // The sky, and clouds drifting slowly behind the midway.
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const horizon = (HORIZON - camera.y) * zoom;
-    const sky = ctx.createLinearGradient(0, horizon - 260 * zoom, 0, horizon);
-    sky.addColorStop(0, palette.skyHigh);
-    sky.addColorStop(1, palette.sky);
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, canvas.clientWidth, Math.max(0, horizon + 2));
-
-    ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, 0, 0);
-    const span = view.w + 200;
-    for (const cloud of clouds) {
-      const x =
-        ((((cloud.x * span - camera.x * 0.3 + (calm ? 0 : t * cloud.speed)) % span) + span) %
-          span) -
-        100;
-      const y = HORIZON - camera.y - 50 - cloud.y * 100;
-      drawCloud(ctx, x, y, cloud.size);
-    }
+    const look = dayLookAt(currentCarnivalTime());
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Snap the camera to whole device pixels so the pre-drawn ground stays crisp.
     const k = dpr * zoom;
     const cam = { x: Math.round(camera.x * k) / k, y: Math.round(camera.y * k) / k };
     const visible: Box = { left: cam.x, top: cam.y, right: cam.x + view.w, bottom: cam.y + view.h };
     ctx.setTransform(k, 0, 0, k, -cam.x * k, -cam.y * k);
-    drawField(ctx, visible);
+    drawField(ctx, visible, look);
     if (ground) {
       const bounds = groundBounds(map);
       if (ground.scale === k) {
@@ -378,6 +366,19 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
     drawBunting(ctx, map, t, visible);
     drawFloaters(ctx, floaters);
 
+    // The light of the time of day, washed over everything drawn so far, then
+    // the booth and ride lights on top.
+    if (look.lightAmount > 0) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.globalAlpha = look.lightAmount;
+      ctx.fillStyle = look.light;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+    drawLights(ctx, map, look.lights, t, visible);
+
     // The prompt over the booth in reach, at full resolution.
     if (inReach?.gameId) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -389,6 +390,31 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
         (c.y - BOOTH_SIGN_HEIGHT - 46 - cam.y) * zoom,
       );
     }
+
+    // The sky goes in behind everything drawn so far: clouds drifting slowly,
+    // then the stars, then the sky itself.
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, 0, 0);
+    const span = view.w + 200;
+    for (const cloud of clouds) {
+      const x =
+        ((((cloud.x * span - camera.x * 0.3 + (calm ? 0 : t * cloud.speed)) % span) + span) %
+          span) -
+        100;
+      const y = HORIZON - camera.y - 50 - cloud.y * 100;
+      drawCloud(ctx, x, y, cloud.size, look);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const horizon = (HORIZON - camera.y) * zoom;
+    drawStars(ctx, canvas.clientWidth, horizon, look.stars);
+    const sky = ctx.createLinearGradient(0, horizon - 260 * zoom, 0, horizon);
+    sky.addColorStop(0, look.skyTop);
+    sky.addColorStop(0.55, look.skyMiddle);
+    sky.addColorStop(1, look.skyHorizon);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    ctx.restore();
   };
 
   let frame = 0;
