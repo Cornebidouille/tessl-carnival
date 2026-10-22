@@ -5,6 +5,7 @@ import {
   createState,
   fire,
   isHit,
+  press,
   scoreForHit,
   step,
   type Target,
@@ -76,5 +77,25 @@ describe('water cannon', () => {
     const slow = scoreForHit({ ...target, speed: 60 });
     const fast = scoreForHit({ ...target, speed: -180 });
     expect(Math.max(fast, slow)).toBeGreaterThanOrEqual(slow);
+  });
+
+  it('fires one shot when pressed during a round', () => {
+    const state = createState();
+    expect(press(state, 400, 0)).toBe(state);
+    expect(state.tank).toBe(TANK_SIZE - 1);
+    expect(state.shots).toHaveLength(1);
+  });
+
+  it('starts a new round when pressed on the game over screen', () => {
+    const state = createState();
+    state.tank = 0;
+    state.score = 50;
+    state.phase = 'over';
+    const next = press(state, 400, 0);
+    expect(next).not.toBe(state);
+    expect(next.phase).toBe('playing');
+    expect(next.tank).toBe(TANK_SIZE);
+    expect(next.score).toBe(0);
+    expect(next.shots).toHaveLength(0);
   });
 });
