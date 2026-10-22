@@ -38,8 +38,12 @@
       ],
       "when": {
         "event.label.name": "tessl",
-        "event.sender.type": "User",
-        "event.sender.id": 14827655,
+        "event.sender.id": {
+          "in": [
+            14827655,
+            295179765
+          ]
+        },
         "event.issue.state": "open"
       },
       "concurrency": {
