@@ -13,6 +13,9 @@ export const DEFAULT_START_HOUR = 8;
 
 const MINUTES_PER_DAY = 24 * 60;
 
+/** When the page loaded: `performance.now()` counts from navigation, so this is taken as the page's script runs. */
+const pageLoadedAt = performance.now();
+
 /** Each part of the day starts at its hour and runs until the next part starts. */
 const PARTS_OF_DAY: readonly { from: number; part: PartOfDay }[] = [
   { from: 2, part: 'closed' },
@@ -57,7 +60,7 @@ export function startHourFrom(search: string): number {
 
 /** The carnival time now: the clock started when the page loaded, at the `?hour=` option's hour. */
 export function currentCarnivalTime(
-  msSincePageLoad: number = performance.now(),
+  msSincePageLoad: number = performance.now() - pageLoadedAt,
   search: string = window.location.search,
 ): CarnivalTime {
   return carnivalTimeAt(msSincePageLoad, startHourFrom(search));
