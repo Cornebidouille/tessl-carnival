@@ -62,6 +62,13 @@ The carnival is a small browser game. It ships with one game, the **water
 cannon**, and a midway you walk around: a sunny fairground with tents, rides and
 a booth for every game. Empty booths say "coming soon" until a game fills them.
 
+A clock in the corner of the midway shows the carnival time: a 24-hour day
+lasts five real minutes, starting at 08:00 (open the page with `?hour=1` to
+start at another hour). The games are open from 06:00 until 02:00. From 02:00
+to 06:00 the carnival is closed: you can still walk around, but no game starts
+until it opens again. A round you're already playing at 02:00 finishes as
+usual.
+
 You grow your carnival by adding games through your factory. Each game lives in
 its own folder, and the only shared file it touches is the game list in
 `src/games/index.ts`. Several games can be built at once with little to clash
