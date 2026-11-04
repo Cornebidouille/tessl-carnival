@@ -20,6 +20,9 @@ Each target scores 10 points for every 60 px/s of speed, rounded up:
 | Bottom | 60 px/s  | 10     |
 
 Your final score is saved to the carnival's score board when the game ends.
+The game over screen then shows where that score landed among your recorded
+water cannon scores: "New best!" for 1st place, otherwise "2nd best score",
+"3rd best score" and so on. A score that ties an earlier one takes the better place.
 
 ## Options
 
@@ -28,6 +31,6 @@ Add `?shots=25` to the page URL to change the size of the tank, for example
 
 ## Files
 
-- `game.ts`: the game logic (`createState`, `fire`, `press`, `step`, `scoreForHit`) and the
+- `game.ts`: the game logic (`createState`, `fire`, `press`, `step`, `scoreForHit`, `placeText`) and the
   `waterCannon` entry the midway registers.
 - `game.test.ts`: tests for the game logic.

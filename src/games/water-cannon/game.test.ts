@@ -5,6 +5,7 @@ import {
   createState,
   fire,
   isHit,
+  placeText,
   press,
   scoreForHit,
   step,
@@ -97,5 +98,19 @@ describe('water cannon', () => {
     expect(next.tank).toBe(TANK_SIZE);
     expect(next.score).toBe(0);
     expect(next.shots).toHaveLength(0);
+  });
+
+  it('calls a first place score a new best', () => {
+    expect(placeText(1)).toBe('New best!');
+  });
+
+  it('names the place of a score below the best', () => {
+    expect(placeText(2)).toBe('2nd best score');
+    expect(placeText(3)).toBe('3rd best score');
+    expect(placeText(4)).toBe('4th best score');
+    expect(placeText(11)).toBe('11th best score');
+    expect(placeText(12)).toBe('12th best score');
+    expect(placeText(21)).toBe('21st best score');
+    expect(placeText(23)).toBe('23rd best score');
   });
 });

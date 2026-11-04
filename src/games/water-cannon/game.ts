@@ -1,4 +1,4 @@
-import { canvasFont, recordScore, theme, type CarnivalGame } from '../../carnival';
+import { canvasFont, rankOf, recordScore, theme, type CarnivalGame } from '../../carnival';
 
 const { width: WIDTH, height: HEIGHT } = theme.canvas;
 
@@ -90,6 +90,14 @@ export function press(state: WaterCannonState, aimX: number, aimY: number): Wate
   return state;
 }
 
+/** The game over line for a score's place on the board: "New best!", "2nd best score" and so on. */
+export function placeText(place: number): string {
+  if (place <= 1) return 'New best!';
+  const teen = place % 100 >= 11 && place % 100 <= 13;
+  const suffix = teen ? 'th' : (['th', 'st', 'nd', 'rd'][place % 10] ?? 'th');
+  return `${place}${suffix} best score`;
+}
+
 /** Advances the game by `dt` seconds. */
 export function step(state: WaterCannonState, dt: number): void {
   for (const target of state.targets) {
@@ -124,6 +132,7 @@ function draw(
   ctx: CanvasRenderingContext2D,
   state: WaterCannonState,
   aim: { x: number; y: number },
+  place: number | undefined,
 ) {
   const { colors } = theme;
 
@@ -203,9 +212,14 @@ function draw(
     ctx.fillStyle = colors.accent;
     ctx.font = canvasFont('title', 'bold');
     ctx.fillText(`Tank empty! You scored ${state.score}`, WIDTH / 2, HEIGHT / 2);
+    if (place !== undefined) {
+      ctx.fillStyle = colors.text;
+      ctx.font = canvasFont('body', 'bold');
+      ctx.fillText(placeText(place), WIDTH / 2, HEIGHT / 2 + 40);
+    }
     ctx.fillStyle = colors.text;
     ctx.font = canvasFont('body');
-    ctx.fillText('Click or press Space to play again', WIDTH / 2, HEIGHT / 2 + 40);
+    ctx.fillText('Click or press Space to play again', WIDTH / 2, HEIGHT / 2 + 76);
   }
 }
 
@@ -222,6 +236,7 @@ export const waterCannon: CarnivalGame = {
 
     let state = createState();
     let scoreRecorded = false;
+    let place: number | undefined;
     const aim = { x: WIDTH / 2, y: 0 };
 
     const toCanvas = (event: PointerEvent) => {
@@ -237,6 +252,7 @@ export const waterCannon: CarnivalGame = {
       if (next !== state) {
         state = next;
         scoreRecorded = false;
+        place = undefined;
       }
     };
     const onDown = (event: PointerEvent) => {
@@ -264,10 +280,11 @@ export const waterCannon: CarnivalGame = {
       last = time;
       step(state, dt);
       if (state.phase === 'over' && !scoreRecorded) {
-        recordScore(waterCannon.id, state.score);
+        const entry = recordScore(waterCannon.id, state.score);
+        place = rankOf(waterCannon.id, entry.score);
         scoreRecorded = true;
       }
-      draw(ctx, state, aim);
+      draw(ctx, state, aim, place);
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
