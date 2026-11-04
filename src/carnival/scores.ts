@@ -42,7 +42,12 @@ export function createScoreBoard(storage: ScoreStorage, now: () => number = Date
     return top(gameId, 1)[0]?.score;
   }
 
-  return { record, best, top };
+  /** The score's 1-based place among the game's recorded scores, 1 being the best. A tie takes the better place. */
+  function rank(gameId: string, score: number): number {
+    return 1 + load().filter((entry) => entry.gameId === gameId && entry.score > score).length;
+  }
+
+  return { record, best, top, rank };
 }
 
 function browserStorage(): ScoreStorage {
@@ -64,3 +69,4 @@ const board = createScoreBoard(browserStorage());
 export const recordScore = board.record;
 export const bestScore = board.best;
 export const topScores = board.top;
+export const rankOf = board.rank;
