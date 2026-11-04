@@ -1,5 +1,12 @@
 import './style.css';
-import { applyTheme, bestScore, currentCarnivalTime, type CarnivalGame } from './carnival';
+import {
+  applyTheme,
+  bestScore,
+  currentCarnivalTime,
+  topScores,
+  type CarnivalGame,
+} from './carnival';
+import { BOOTH_SCORE_COUNT, NO_SCORES, boothScores } from './booth-scores';
 import { registry } from './games';
 import { startMidway } from './midway/midway';
 import type { BoothSlot } from './midway/world';
@@ -23,7 +30,7 @@ const NOTICE_MS = 4000;
 
 function bestText(game: CarnivalGame): string {
   const best = bestScore(game.id);
-  return best === undefined ? 'No scores yet' : `Best: ${best}`;
+  return best === undefined ? NO_SCORES : `Best: ${best}`;
 }
 
 function renderMidway(notice?: string) {
@@ -51,6 +58,7 @@ function renderMidway(notice?: string) {
         <h2></h2>
         <p class="description"></p>
         <p class="best"></p>
+        <ol class="top-scores"></ol>
         <a class="play">Play</a>
         <p class="hours"></p>
       </div>
@@ -93,7 +101,17 @@ function renderMidway(notice?: string) {
     card.querySelector('h2')!.textContent = game?.name ?? 'Coming soon';
     card.querySelector('.description')!.textContent =
       game?.description ?? 'This booth is waiting for a game. Build one and it opens here.';
-    card.querySelector('.best')!.textContent = game ? bestText(game) : '';
+    const { heading, scores } = game
+      ? boothScores(topScores(game.id, BOOTH_SCORE_COUNT))
+      : { heading: '', scores: [] };
+    card.querySelector('.best')!.textContent = heading;
+    card.querySelector('.top-scores')!.replaceChildren(
+      ...scores.map((score) => {
+        const item = document.createElement('li');
+        item.textContent = String(score);
+        return item;
+      }),
+    );
     const link = card.querySelector<HTMLAnchorElement>('.play')!;
     link.hidden = !game || state === 'closed';
     if (game) link.href = `#/play/${game.id}`;
