@@ -245,6 +245,15 @@ kbd {
   display: none;
 }
 
+.booth-card .top-scores {
+  margin: -6px 0 12px;
+  padding-left: 1.5em;
+}
+
+.booth-card .top-scores:empty {
+  display: none;
+}
+
 .play {
   display: inline-block;
   padding: 8px 20px;
