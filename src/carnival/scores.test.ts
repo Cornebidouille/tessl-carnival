@@ -53,4 +53,39 @@ describe('score board', () => {
     expect(() => board.record('water-cannon', -1)).toThrow();
     expect(() => board.record('water-cannon', Number.NaN)).toThrow();
   });
+
+  it('ranks a score above every recorded score first', () => {
+    const board = createScoreBoard(memoryStorage());
+    board.record('water-cannon', 120);
+    board.record('water-cannon', 340);
+    board.record('water-cannon', 500);
+    expect(board.rank('water-cannon', 500)).toBe(1);
+    expect(board.rank('water-cannon', 600)).toBe(1);
+  });
+
+  it('ranks a lower score below the better ones', () => {
+    const board = createScoreBoard(memoryStorage());
+    board.record('water-cannon', 500);
+    board.record('water-cannon', 340);
+    board.record('water-cannon', 120);
+    board.record('ring-toss', 900);
+    expect(board.rank('water-cannon', 340)).toBe(2);
+    expect(board.rank('water-cannon', 120)).toBe(3);
+  });
+
+  it('gives a tie the better place', () => {
+    const board = createScoreBoard(memoryStorage());
+    board.record('water-cannon', 500);
+    board.record('water-cannon', 200);
+    board.record('water-cannon', 200);
+    board.record('water-cannon', 50);
+    expect(board.rank('water-cannon', 200)).toBe(2);
+    expect(board.rank('water-cannon', 50)).toBe(4);
+  });
+
+  it('ranks first in a game with no scores', () => {
+    const board = createScoreBoard(memoryStorage());
+    board.record('ring-toss', 900);
+    expect(board.rank('water-cannon', 0)).toBe(1);
+  });
 });
