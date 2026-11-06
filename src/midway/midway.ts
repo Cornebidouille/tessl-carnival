@@ -1,4 +1,4 @@
-import { currentCarnivalTime, currentSkin } from '../carnival';
+import { currentCarnivalTime, currentSkin, startHourFrom } from '../carnival';
 import { dayLookAt } from './daylight';
 import { palette } from './palette';
 import {
@@ -15,6 +15,7 @@ import {
   drawGroundLayer,
   drawLights,
   drawProp,
+  drawSnowman,
   drawStars,
   drawWalker,
   groundBounds,
@@ -22,6 +23,7 @@ import {
   label,
   PLAYER_LOOK,
   propBounds,
+  snowmanBounds,
   visitorLook,
   type Box,
   type Cloud,
@@ -47,6 +49,14 @@ import {
   type Point,
   type Prop,
 } from './world';
+import {
+  snowAt,
+  snowAtStartFrom,
+  snowfalls,
+  snowmanParts,
+  snowmanSpots,
+  snowmenAt,
+} from './weather';
 
 export interface MidwayOptions {
   games: readonly { id: string; name: string }[];
@@ -80,6 +90,10 @@ const MIN_QUALITY = 0.5;
 /** Where the player stood when they last left the midway, for this page load. */
 let returnTo: Point | undefined;
 
+/** The weather runs from page load with a seed taken then, so it carries on across visits to the games. */
+const pageLoadedAt = performance.now();
+const weatherSeed = Math.floor(Math.random() * 2 ** 32);
+
 export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): MidwayControls {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D is not available');
@@ -111,8 +125,15 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
     speed: 3 + Math.random() * 4,
   }));
   const floaters: Floater[] = [];
-  /** Under the Christmas skin the floaters are a few snowflakes falling, not balloons rising. */
+  /**
+   * Under the Christmas skin it snows now and then, the floaters are the
+   * snowflakes falling, and snowmen build along the edge while it snows.
+   */
   const snowing = currentSkin() === 'christmas';
+  const snowAtStart = snowAtStartFrom(window.location.search);
+  const startHour = startHourFrom(window.location.search);
+  const spots = snowing ? snowmanSpots(map) : [];
+  let snow = 0;
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let nextFloater = 2;
   let inReach: BoothSlot | undefined;
@@ -230,9 +251,12 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
   const updateFloaters = (dt: number) => {
     if (calm) return;
     nextFloater -= dt;
-    if (nextFloater <= 0) {
-      nextFloater = snowing ? 0.6 + Math.random() * 0.8 : 4 + Math.random() * 5;
-      const from = strolls[Math.floor(Math.random() * strolls.length)];
+    // Flakes only start falling during a snowfall; the ones already falling finish.
+    if (nextFloater <= 0 && (!snowing || snow > 0)) {
+      nextFloater = snowing ? 0.25 + Math.random() * 0.3 : 4 + Math.random() * 5;
+      const from = snowing
+        ? { x: Math.random() * map.width - 0.5, y: Math.random() * map.height - 0.5 }
+        : strolls[Math.floor(Math.random() * strolls.length)];
       const p = toScreen(from.x + 0.5, from.y + 0.5);
       floaters.push({
         x: p.x,
@@ -248,6 +272,9 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
     const life = snowing ? SNOWFLAKE_LIFE : 6;
     floaters.splice(0, floaters.length, ...floaters.filter((f) => f.age < life));
   };
+
+  const weatherNow = () => performance.now() - pageLoadedAt;
+  const schedule = () => snowfalls(weatherSeed, weatherNow(), snowAtStart);
 
   const updateCamera = (dt: number) => {
     const focus = toScreen(player.x, player.y);
@@ -357,7 +384,7 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
       const { depth, box, booth, prop, name } = item;
       const paint = booth
         ? () => drawBooth(ctx, booth, name, t, booth === inReach)
-        : () => drawProp(ctx, prop!, t);
+        : () => drawProp(ctx, prop!, t, snow);
       drawables.push({ depth, box, draw: () => faded(box, depth, paint) });
     }
     drawables
@@ -366,9 +393,17 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
       .forEach((d) => d.draw());
 
     drawFrontHedge(ctx, map);
+    // Snowmen stand out on the field just past the front hedges.
+    if (snowing) {
+      const snowmen = snowmenAt(weatherNow(), schedule(), startHour, spots.length);
+      snowmen.forEach(({ progress, melt }, i) => {
+        if (onScreen(snowmanBounds(spots[i])))
+          drawSnowman(ctx, spots[i], snowmanParts(progress), melt);
+      });
+    }
     if (onScreen(archBounds(map))) faded(archBounds(map), Infinity, () => drawArch(ctx, map, t));
     drawBunting(ctx, map, t, visible);
-    drawFloaters(ctx, floaters);
+    drawFloaters(ctx, floaters, snow);
 
     // The light of the time of day, washed over everything drawn so far, then
     // the booth and ride lights on top.
@@ -458,6 +493,7 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
       options.onReach(reach);
     }
 
+    if (snowing) snow = snowAt(weatherNow(), schedule());
     updateFloaters(dt);
     updateCamera(dt);
     draw(time / 1000);

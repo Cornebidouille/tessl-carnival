@@ -1,6 +1,7 @@
 import { canvasFont, currentSkin, theme } from '../carnival';
 import bannerUrl from './aidevcon-banner.png';
 import { palette, type DayLook } from './palette';
+import type { SnowmanParts } from './weather';
 import {
   CART_KINDS,
   toScreen,
@@ -1795,12 +1796,17 @@ function snowflake(ctx: Ctx, x: number, y: number, r: number) {
   ctx.stroke();
 }
 
-/** Under the Christmas skin a balloon stand is a drift of snow with flakes falling onto it. */
-function snowfall(ctx: Ctx, prop: Prop, t: number) {
+/**
+ * Under the Christmas skin a balloon stand is a drift of snow, with flakes
+ * falling onto it while it snows (`snow` from 0 to 1).
+ */
+function snowfall(ctx: Ctx, prop: Prop, t: number, snow: number) {
   const [x, y] = at(prop.x + 0.5, prop.y + 0.5);
   oval(ctx, x + 1, y + 1, 9, 3.5, palette.snowShade);
   oval(ctx, x, y - 1, 7, 3, palette.snow);
-  const fade = ctx.globalAlpha;
+  if (snow <= 0) return;
+  const before = ctx.globalAlpha;
+  const fade = before * snow;
   for (let i = 0; i < 4; i++) {
     const fall = (t * 0.25 + i / 4 + hash(prop.x, prop.y, i)) % 1;
     const fx = x - 8 + i * 5 + Math.sin(t * 1.2 + i * 2) * 2.5;
@@ -1808,11 +1814,11 @@ function snowfall(ctx: Ctx, prop: Prop, t: number) {
     ctx.globalAlpha = fade * Math.min(1, (1 - fall) * 4);
     snowflake(ctx, fx, fy, 2 + (i % 2));
   }
-  ctx.globalAlpha = fade;
+  ctx.globalAlpha = before;
 }
 
-function balloons(ctx: Ctx, prop: Prop, t: number) {
-  if (NORTH_POLE) return snowfall(ctx, prop, t);
+function balloons(ctx: Ctx, prop: Prop, t: number, snow: number) {
+  if (NORTH_POLE) return snowfall(ctx, prop, t, snow);
   const c = at(prop.x + 0.5, prop.y + 0.5);
   oval(ctx, c[0] + 2, c[1] + 1, 5, 2, palette.shadow);
   box(
@@ -2632,12 +2638,13 @@ export interface Floater {
 
 /**
  * Balloons someone let go of, drifting up into the sky. Under the Christmas
- * skin they are snowflakes drifting down over the map.
+ * skin they are snowflakes drifting down over the map, fading in and out with
+ * the snowfall (`snow` from 0 to 1).
  */
-export function drawFloaters(ctx: Ctx, floaters: readonly Floater[]) {
+export function drawFloaters(ctx: Ctx, floaters: readonly Floater[], snow = 0) {
   if (NORTH_POLE) {
     for (const f of floaters) {
-      ctx.globalAlpha = Math.max(0, Math.min(1, f.age, SNOWFLAKE_LIFE - f.age));
+      ctx.globalAlpha = snow * Math.max(0, Math.min(1, f.age, SNOWFLAKE_LIFE - f.age));
       snowflake(ctx, f.x + Math.sin(f.age * 1.5 + f.x) * 6, f.y, 2.5);
     }
     ctx.globalAlpha = 1;
@@ -2656,6 +2663,104 @@ export function drawFloaters(ctx: Ctx, floaters: readonly Floater[]) {
     oval(ctx, f.x + sway - 1.8, f.y - 2.5, 1.4, 2, 'rgba(255,255,255,0.6)');
   }
   ctx.globalAlpha = 1;
+}
+
+// ── Snowmen ───────────────────────────────────────────────────────────────
+
+/** A snowman's bottom ball, middle ball and head: radius and how high its centre sits. */
+const SNOWMAN_BALLS = [
+  { r: 7, z: 6 },
+  { r: 5, z: 15.5 },
+  { r: 3.6, z: 22.5 },
+] as const;
+
+/** The world-pixel box a snowman at a tile position covers. */
+export function snowmanBounds(spot: Point): Box {
+  const p = toScreen(spot.x, spot.y);
+  return { left: p.x - 22, right: p.x + 12, top: p.y - 36, bottom: p.y + 4 };
+}
+
+/**
+ * A snowman at a tile position, built as far as `parts` says: the bottom ball
+ * rolls in and grows, then the middle ball and the head, then the coal eyes,
+ * the carrot nose, a scarf and a hat. `melt`, from 0 to 1, slumps it into the
+ * snow and fades it away.
+ */
+export function drawSnowman(ctx: Ctx, spot: Point, parts: SnowmanParts, melt: number) {
+  if (parts.bottom <= 0 || melt >= 1) return;
+  const [x, y] = at(spot.x, spot.y);
+  const fade = ctx.globalAlpha;
+  ctx.save();
+  ctx.globalAlpha = fade * (1 - melt);
+  ctx.translate(x, y);
+  ctx.scale(1 + melt * 0.5, 1 - melt * 0.85);
+
+  const grown = [parts.bottom, parts.middle, parts.head];
+  oval(ctx, 3, 1, 9 * Math.max(0.4, parts.bottom), 3.5, palette.shadow);
+  SNOWMAN_BALLS.forEach((ball, i) => {
+    const s = grown[i];
+    if (s <= 0) return;
+    const r = ball.r * (0.3 + 0.7 * s);
+    // The bottom ball rolls in from the left as it grows; the others settle on top.
+    const bx = i === 0 ? -(1 - s) * 12 : 0;
+    const bz = i === 0 ? r - 1 : ball.z + (1 - s) * 6;
+    oval(ctx, bx + 0.8, -bz + 0.8, r, r * 0.95, palette.snowShade);
+    oval(ctx, bx, -bz, r, r * 0.95, palette.snow);
+  });
+
+  const d = parts.dressing;
+  if (d > 0) {
+    const head = SNOWMAN_BALLS[2];
+    const body = SNOWMAN_BALLS[1];
+    ctx.globalAlpha = fade * (1 - melt) * Math.min(1, d * 4);
+    oval(ctx, -1.3, -head.z - 0.6, 0.6, 0.6, palette.coal);
+    oval(ctx, 1.3, -head.z - 0.6, 0.6, 0.6, palette.coal);
+    oval(ctx, 0, -body.z + 1, 0.7, 0.7, palette.coal);
+    oval(ctx, 0, -body.z - 2, 0.7, 0.7, palette.coal);
+    if (d > 0.25) {
+      ctx.globalAlpha = fade * (1 - melt) * Math.min(1, (d - 0.25) * 4);
+      poly(
+        ctx,
+        [
+          [0, -head.z + 0.2],
+          [4.5, -head.z + 0.9],
+          [0, -head.z + 1.4],
+        ],
+        palette.carrot,
+      );
+    }
+    if (d > 0.5) {
+      const scarf = palette.scarf[Math.floor(Math.abs(spot.x * 3 + spot.y)) % palette.scarf.length];
+      ctx.globalAlpha = fade * (1 - melt) * Math.min(1, (d - 0.5) * 4);
+      oval(ctx, 0, -head.z + 3.6, 4.2, 1.5, scarf);
+      poly(
+        ctx,
+        [
+          [1.5, -head.z + 4],
+          [3.2, -head.z + 4],
+          [3.8, -head.z + 9],
+          [2, -head.z + 9],
+        ],
+        scarf,
+      );
+    }
+    if (d > 0.75) {
+      ctx.globalAlpha = fade * (1 - melt) * Math.min(1, (d - 0.75) * 4);
+      const top = -head.z - head.r + 0.8;
+      oval(ctx, 0, top, 4.4, 1.3, palette.hat);
+      poly(
+        ctx,
+        [
+          [-2.6, top],
+          [2.6, top],
+          [2.4, top - 5],
+          [-2.4, top - 5],
+        ],
+        palette.hat,
+      );
+    }
+  }
+  ctx.restore();
 }
 
 // ── Lights after dark ─────────────────────────────────────────────────────
@@ -2726,7 +2831,8 @@ export function drawLights(ctx: Ctx, map: MidwayMap, brightness: number, t: numb
 
 // ── Everything else ───────────────────────────────────────────────────────
 
-export function drawProp(ctx: Ctx, prop: Prop, t: number) {
+/** Draws a prop. `snow`, from 0 to 1, is how hard it's snowing, under the Christmas skin. */
+export function drawProp(ctx: Ctx, prop: Prop, t: number, snow = 0) {
   switch (prop.kind) {
     case 'big-top':
       return NORTH_POLE ? workshopHall(ctx, prop, t) : bigTop(ctx, prop, t);
@@ -2762,7 +2868,7 @@ export function drawProp(ctx: Ctx, prop: Prop, t: number) {
     case 'planter':
       return planter(ctx, prop);
     case 'balloons':
-      return balloons(ctx, prop, t);
+      return balloons(ctx, prop, t, snow);
     case 'bunting-pole':
       return buntingPole(ctx, prop);
     case 'billboard':
