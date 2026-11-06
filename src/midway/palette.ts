@@ -63,6 +63,11 @@ function carnivalPalette(colors: Colors) {
     elfHats: ['#2e8b57', colors.stripeA, colors.accent, '#1f6b3a'],
     elfShoe: '#5a3620',
     belt: '#1a1414',
+    /** Snow on roofs and the gingerbread and icing of the North Pole's houses. */
+    snow: '#ffffff',
+    snowShade: '#dfe8f0',
+    gingerbread: '#b5713a',
+    gingerbreadShade: '#8f5428',
     bunting: [colors.stripeA, colors.accent, '#2b8ccc', colors.stripeB],
     balloons: [colors.stripeA, colors.accent, '#2b8ccc', colors.water, '#f59ac0'],
   };
@@ -131,6 +136,11 @@ function christmasPalette(colors: Colors): Palette {
     elfHats: ['#1f7a4a', colors.stripeA, colors.accent, '#145c36'],
     elfShoe: '#5a3620',
     belt: '#141018',
+    /** Snow on roofs and the gingerbread and icing of the North Pole's houses. */
+    snow: '#ffffff',
+    snowShade: '#d6e5f1',
+    gingerbread: '#b5713a',
+    gingerbreadShade: '#8f5428',
     bunting: [colors.stripeA, '#1f7a4a', colors.accent, colors.stripeB],
     balloons: [colors.stripeA, '#1f7a4a', colors.accent, colors.water, colors.stripeB],
   };
