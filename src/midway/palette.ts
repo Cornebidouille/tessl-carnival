@@ -72,6 +72,11 @@ function carnivalPalette(colors: Colors) {
     balloons: [colors.stripeA, colors.accent, '#2b8ccc', colors.water, '#f59ac0'],
     /** The bulbs on the North Pole's strings of fairy lights. */
     fairyLights: [colors.stripeA, '#2e8b57', colors.accent, '#2b8ccc'],
+    /** A snowman's coal eyes and buttons, carrot nose, scarf and hat. */
+    coal: '#22202a',
+    carrot: '#f08a24',
+    scarf: [colors.stripeA, '#2e8b57', '#2b8ccc'],
+    hat: '#2a2630',
   };
 }
 
@@ -147,6 +152,11 @@ function christmasPalette(colors: Colors): Palette {
     balloons: [colors.stripeA, '#1f7a4a', colors.accent, colors.water, colors.stripeB],
     /** The bulbs on the North Pole's strings of fairy lights. */
     fairyLights: [colors.stripeA, '#1f7a4a', colors.accent, '#2b6cb0'],
+    /** A snowman's coal eyes and buttons, carrot nose, scarf and hat. */
+    coal: '#22202a',
+    carrot: '#f08a24',
+    scarf: [colors.stripeA, '#1f7a4a', '#2b6cb0'],
+    hat: '#1e1a26',
   };
 }
 
