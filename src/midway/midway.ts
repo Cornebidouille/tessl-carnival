@@ -1,4 +1,4 @@
-import { currentCarnivalTime } from '../carnival';
+import { currentCarnivalTime, currentSkin } from '../carnival';
 import { dayLookAt } from './daylight';
 import { palette } from './palette';
 import {
@@ -26,6 +26,7 @@ import {
   type Box,
   type Cloud,
   type Floater,
+  SNOWFLAKE_LIFE,
   type GroundLayer,
 } from './render';
 import {
@@ -110,6 +111,8 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
     speed: 3 + Math.random() * 4,
   }));
   const floaters: Floater[] = [];
+  /** Under the Christmas skin the floaters are a few snowflakes falling, not balloons rising. */
+  const snowing = currentSkin() === 'christmas';
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let nextFloater = 2;
   let inReach: BoothSlot | undefined;
@@ -228,21 +231,22 @@ export function startMidway(canvas: HTMLCanvasElement, options: MidwayOptions): 
     if (calm) return;
     nextFloater -= dt;
     if (nextFloater <= 0) {
-      nextFloater = 4 + Math.random() * 5;
+      nextFloater = snowing ? 0.6 + Math.random() * 0.8 : 4 + Math.random() * 5;
       const from = strolls[Math.floor(Math.random() * strolls.length)];
       const p = toScreen(from.x + 0.5, from.y + 0.5);
       floaters.push({
         x: p.x,
-        y: p.y - 24,
+        y: p.y - (snowing ? 120 : 24),
         age: 0,
         color: palette.balloons[Math.floor(Math.random() * palette.balloons.length)],
       });
     }
     for (const f of floaters) {
       f.age += dt;
-      f.y -= 22 * dt;
+      f.y += (snowing ? 14 : -22) * dt;
     }
-    floaters.splice(0, floaters.length, ...floaters.filter((f) => f.age < 6));
+    const life = snowing ? SNOWFLAKE_LIFE : 6;
+    floaters.splice(0, floaters.length, ...floaters.filter((f) => f.age < life));
   };
 
   const updateCamera = (dt: number) => {

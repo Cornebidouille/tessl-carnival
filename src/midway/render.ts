@@ -26,6 +26,9 @@ function at(x: number, y: number, z = 0): Pt {
   return [s.x, s.y - z];
 }
 
+/** Under the Christmas skin, the midway's buildings become Santa's workshop. */
+const NORTH_POLE = currentSkin() === 'christmas';
+
 /** Screen size of a one-tile radius circle lying on the ground. */
 const ISO_RX = 16 * Math.SQRT2;
 const ISO_RY = 8 * Math.SQRT2;
@@ -321,6 +324,7 @@ export function drawGroundLayer(map: MidwayMap, wanted: number): GroundLayer {
 }
 
 function tree(ctx: Ctx, x: number, y: number) {
+  if (NORTH_POLE) return pine(ctx, x, y);
   const [px, py] = at(x, y);
   oval(ctx, px + 4, py + 1, 12, 5, palette.shadow);
   poly(
@@ -336,6 +340,59 @@ function tree(ctx: Ctx, x: number, y: number) {
   oval(ctx, px, py - 20, 11, 11, palette.hedgeDark);
   oval(ctx, px - 2, py - 22, 9, 9, palette.hedge);
   oval(ctx, px - 4, py - 25, 4, 4, palette.hedgeLight);
+}
+
+/** Under the Christmas skin a field tree is a snow-topped pine. */
+function pine(ctx: Ctx, x: number, y: number) {
+  const [px, py] = at(x, y);
+  oval(ctx, px + 4, py + 1, 10, 4, palette.shadow);
+  poly(
+    ctx,
+    [
+      [px - 1.5, py],
+      [px + 1.5, py],
+      [px + 1.5, py - 6],
+      [px - 1.5, py - 6],
+    ],
+    palette.woodDark,
+  );
+  const tiers = [
+    { y: py - 4, w: 11, h: 13 },
+    { y: py - 12, w: 9, h: 12 },
+    { y: py - 19, w: 6.5, h: 11 },
+  ];
+  for (const tier of tiers) {
+    const top = tier.y - tier.h;
+    poly(
+      ctx,
+      [
+        [px, top],
+        [px + tier.w, tier.y],
+        [px - tier.w, tier.y],
+      ],
+      palette.hedgeDark,
+    );
+    poly(
+      ctx,
+      [
+        [px, top],
+        [px, tier.y],
+        [px - tier.w, tier.y],
+      ],
+      palette.hedge,
+    );
+    // Snow lying on the tier's upper half.
+    poly(
+      ctx,
+      [
+        [px, top],
+        [px + tier.w * 0.5, top + tier.h * 0.5],
+        [px, top + tier.h * 0.4],
+        [px - tier.w * 0.5, top + tier.h * 0.5],
+      ],
+      palette.snow,
+    );
+  }
 }
 
 function hedge(ctx: Ctx, area: Rect) {
@@ -389,9 +446,6 @@ const BLUE: Stripes = {
   bShade: palette.creamShade,
 };
 const TENT_COLORS = [GOLD, BLUE, BLUE, RED] as const;
-
-/** Under the Christmas skin, the midway's buildings become Santa's workshop. */
-const NORTH_POLE = currentSkin() === 'christmas';
 
 const CANDY: Stripes = {
   a: palette.red,
@@ -1676,9 +1730,25 @@ function bench(ctx: Ctx, prop: Prop) {
     box(ctx, lx, y + 0.05, 0.05, 0.2, 0, 6, palette.woodDark, palette.woodDark, palette.woodDark);
   box(ctx, x, y, 0.76, 0.26, 6, 2, palette.woodLight, palette.wood, palette.woodDark);
   box(ctx, x, y - 0.02, 0.76, 0.06, 8, 7, palette.woodLight, palette.wood, palette.woodDark);
+  if (!NORTH_POLE) return;
+  // A dusting of snow on the seat and along the top of the back.
+  box(
+    ctx,
+    x + 0.02,
+    y + 0.08,
+    0.72,
+    0.16,
+    8,
+    1,
+    palette.snow,
+    palette.snowShade,
+    palette.snowShade,
+  );
+  box(ctx, x, y - 0.02, 0.76, 0.06, 15, 1, palette.snow, palette.snowShade, palette.snowShade);
 }
 
 function planter(ctx: Ctx, prop: Prop) {
+  if (NORTH_POLE) return presentStack(ctx, prop);
   const c = at(prop.x + 0.5, prop.y + 0.5);
   oval(ctx, c[0] + 3, c[1] + 1, 10, 4, palette.shadow);
   box(
@@ -1698,7 +1768,51 @@ function planter(ctx: Ctx, prop: Prop) {
   oval(ctx, c[0], c[1] - 17, 5, 5, palette.hedgeLight);
 }
 
+/** Under the Christmas skin a planter is a stack of wrapped presents. */
+function presentStack(ctx: Ctx, prop: Prop) {
+  const [x, y] = at(prop.x + 0.5, prop.y + 0.5);
+  oval(ctx, x + 3, y + 1, 10, 4, palette.shadow);
+  const n = prop.x + prop.y;
+  present(ctx, x - 4, y - 4, 10, 8, PRESENTS[n % PRESENTS.length]);
+  present(ctx, x + 4, y - 3.5, 8, 7, PRESENTS[(n + 1) % PRESENTS.length]);
+  present(ctx, x, y - 12, 9, 8, PRESENTS[(n + 2) % PRESENTS.length]);
+  present(ctx, x + 1, y - 19, 6, 5, PRESENTS[(n + 3) % PRESENTS.length]);
+}
+
+/** A small six-armed snowflake centred on (x, y). */
+function snowflake(ctx: Ctx, x: number, y: number, r: number) {
+  ctx.strokeStyle = palette.snow;
+  ctx.lineWidth = 0.8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const angle = (i * Math.PI) / 3;
+    const dx = Math.cos(angle) * r;
+    const dy = Math.sin(angle) * r;
+    ctx.moveTo(x - dx, y - dy);
+    ctx.lineTo(x + dx, y + dy);
+  }
+  ctx.stroke();
+}
+
+/** Under the Christmas skin a balloon stand is a drift of snow with flakes falling onto it. */
+function snowfall(ctx: Ctx, prop: Prop, t: number) {
+  const [x, y] = at(prop.x + 0.5, prop.y + 0.5);
+  oval(ctx, x + 1, y + 1, 9, 3.5, palette.snowShade);
+  oval(ctx, x, y - 1, 7, 3, palette.snow);
+  const fade = ctx.globalAlpha;
+  for (let i = 0; i < 4; i++) {
+    const fall = (t * 0.25 + i / 4 + hash(prop.x, prop.y, i)) % 1;
+    const fx = x - 8 + i * 5 + Math.sin(t * 1.2 + i * 2) * 2.5;
+    const fy = y - 48 + fall * 44;
+    ctx.globalAlpha = fade * Math.min(1, (1 - fall) * 4);
+    snowflake(ctx, fx, fy, 2 + (i % 2));
+  }
+  ctx.globalAlpha = fade;
+}
+
 function balloons(ctx: Ctx, prop: Prop, t: number) {
+  if (NORTH_POLE) return snowfall(ctx, prop, t);
   const c = at(prop.x + 0.5, prop.y + 0.5);
   oval(ctx, c[0] + 2, c[1] + 1, 5, 2, palette.shadow);
   box(
@@ -1878,8 +1992,20 @@ export function drawBunting(ctx: Ctx, map: MidwayMap, t: number, view: Box) {
     if (!buntingInView(p, q, view)) return;
     const points = buntingLine(p, q);
     stroke(ctx, points, palette.woodDark, 0.6);
-    flags(ctx, points, t, 4, n);
+    if (NORTH_POLE) fairyLights(ctx, points, t, n);
+    else flags(ctx, points, t, 4, n);
   });
+}
+
+/** A fairy light bulb at each point along a string, twinkling with `t`. */
+function fairyLights(ctx: Ctx, points: readonly Pt[], t: number, phase = 0) {
+  const fade = ctx.globalAlpha;
+  points.forEach(([x, y], i) => {
+    const color = palette.fairyLights[(i + phase) % palette.fairyLights.length];
+    ctx.globalAlpha = fade * (Math.sin(t * 3 + i * 1.7 + phase) > -0.3 ? 1 : 0.45);
+    oval(ctx, x, y + 1.6, 1.3, 1.7, color);
+  });
+  ctx.globalAlpha = fade;
 }
 
 /** Whether a string of bunting between `p` and `q`, sag included, can reach the view. */
@@ -2379,6 +2505,7 @@ export function drawArch(ctx: Ctx, map: MidwayMap, t: number) {
     );
   const centre = at((left + right + 0.26) / 2, y, ARCH_HEIGHT + 2);
   onPlane(ctx, centre, () => {
+    if (NORTH_POLE) return workshopSign(ctx, t);
     ctx.fillStyle = palette.gold;
     ctx.beginPath();
     ctx.ellipse(0, -10, 18, 14, 0, Math.PI, Math.PI * 2);
@@ -2403,6 +2530,53 @@ export function drawArch(ctx: Ctx, map: MidwayMap, t: number) {
     const top = at(px + 0.13, y - 0.02, ARCH_HEIGHT);
     flag(ctx, top[0], top[1], t + px, palette.red);
   }
+}
+
+/** The gate's sign under the Christmas skin, in plane-local pixels: a wreath over it, fairy lights under. */
+function workshopSign(ctx: Ctx, t: number) {
+  ctx.strokeStyle = palette.hedge;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(0, -19, 8, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = palette.hedgeLight;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, -19, 9, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.stroke();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + 0.4;
+    oval(ctx, Math.cos(angle) * 8, -19 + Math.sin(angle) * 8, 1.2, 1.2, palette.red);
+  }
+  poly(
+    ctx,
+    [
+      [0, -11],
+      [-5, -14],
+      [-5, -8],
+    ],
+    palette.red,
+  );
+  poly(
+    ctx,
+    [
+      [0, -11],
+      [5, -14],
+      [5, -8],
+    ],
+    palette.red,
+  );
+  signBoard(ctx, "SANTA'S WORKSHOP", 92, 20, {
+    board: palette.red,
+    edge: palette.redShade,
+    text: palette.snow,
+  });
+  const lights: Pt[] = [];
+  for (let i = 0; i < 14; i++) {
+    const s = i / 13;
+    lights.push([-44 + s * 88, 12.5 + Math.sin(s * Math.PI) * 1.5]);
+  }
+  fairyLights(ctx, lights, t * 1.6);
 }
 
 // ── The sky ───────────────────────────────────────────────────────────────
@@ -2446,6 +2620,9 @@ export function drawStars(ctx: Ctx, width: number, horizon: number, brightness: 
   ctx.globalAlpha = 1;
 }
 
+/** How many seconds a snowflake drifts down before it melts away. */
+export const SNOWFLAKE_LIFE = 8;
+
 export interface Floater {
   x: number;
   y: number;
@@ -2453,8 +2630,19 @@ export interface Floater {
   color: string;
 }
 
-/** Balloons someone let go of, drifting up into the sky. */
+/**
+ * Balloons someone let go of, drifting up into the sky. Under the Christmas
+ * skin they are snowflakes drifting down over the map.
+ */
 export function drawFloaters(ctx: Ctx, floaters: readonly Floater[]) {
+  if (NORTH_POLE) {
+    for (const f of floaters) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, f.age, SNOWFLAKE_LIFE - f.age));
+      snowflake(ctx, f.x + Math.sin(f.age * 1.5 + f.x) * 6, f.y, 2.5);
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
   for (const f of floaters) {
     ctx.globalAlpha = Math.max(0, Math.min(1, 6 - f.age));
     const sway = Math.sin(f.age * 2) * 3;
