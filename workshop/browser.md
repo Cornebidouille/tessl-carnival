@@ -221,9 +221,10 @@ The carnival's house rules live in [`AGENTS.md`](../AGENTS.md).
         and scores, and `src/midway/palette.ts` has its own scenery colors.
       - Not report values derived from the theme, test data in `game.test.ts`,
         or anything lint, the type-checker or tests already enforce.
-      - Be accurate about consequences. A game whose `game.ts` has no default
-        export gets no booth. A game whose `id` differs from its folder name
-        breaks the house rule, but nothing breaks for the player.
+      - Be accurate about consequences. If a game's `game.ts` has no default
+        export, or its `id` differs from its folder name, `src/games/index.ts`
+        throws when the midway loads, so the whole midway fails, not just that
+        booth. `src/games/index.test.ts` already fails on both.
    3. **Add `.tessl-code-review.yml`** at the root, listing all five lenses by
       local path (`./review-lenses/<lens-name>/SKILL.md`), with the house rules
       lens scoped to `globs: [src/games/**]`. Add `ignore: [.tessl/plugins/**]`

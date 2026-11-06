@@ -26,7 +26,7 @@ There's also a single-select **Agent** field (option `Tessl`). The script sets i
 
 It's idempotent, so running it more than once is harmless.
 
-1. **Read the board.** Load every item with its Status and when that Status was set, and sort each column oldest first.
+1. **Read the board.** Load every item with its Status and when that Status was set, and sort each column oldest first. A card in In progress or In review whose issue is closed goes back to Done and isn't counted. The board's built-in workflow moves it there when the issue closes, but a run that sets Status at the same moment can overwrite that.
 2. **Push finished work forward.** For each In progress card whose `tessl/issue-<n>` PR is open: if In review is under its limit, move the card to In review. Otherwise leave it, still holding its In progress slot. That hold is the back-pressure.
 3. **Pull new work.** While In progress is under its limit, take the oldest Ready card:
    - add the `tessl` label, which starts the agent;
@@ -181,7 +181,7 @@ const PROJECT_TITLE = 'Your Board'; // must match exactly, or the run stops
 const LABEL = 'tessl';
 const BRANCH_PREFIX = 'tessl/issue-'; // keep in sync with the workflow's `if:`
 const STATUS_FIELD = 'Status';
-const STATUS = { ready: 'Ready', inProgress: 'In progress', inReview: 'In review' };
+const STATUS = { ready: 'Ready', inProgress: 'In progress', inReview: 'In review', done: 'Done' };
 const AGENT_FIELD = 'Agent';
 const AGENT_OPTION = 'Tessl';
 // -----------------
@@ -315,6 +315,7 @@ async function main() {
     ready: option(statusField, STATUS.ready),
     inProgress: option(statusField, STATUS.inProgress),
     inReview: option(statusField, STATUS.inReview),
+    done: option(statusField, STATUS.done),
   };
   const agent = option(agentField, AGENT_OPTION);
   if (!statusField || !status.ready || !status.inProgress || !status.inReview) {
@@ -360,9 +361,18 @@ async function main() {
   const isUnreadable = (i) =>
     !i.content || (i.content.__typename === 'Issue' && !i.content.repository);
 
-  const inProgress = inColumn(status.inProgress);
+  // A closed issue's card belongs in Done. The built-in workflow moves it there, but if a run
+  // set Status at the same moment, it can be back in In progress, holding a slot for good.
+  const isClosed = (i) => isOurIssue(i) && i.content.state === 'CLOSED';
+  for (const item of [...inColumn(status.inProgress), ...inColumn(status.inReview)]) {
+    if (!isClosed(item)) continue;
+    console.log(`#${item.content.number}: issue is closed, moving back to Done`);
+    if (!DRY_RUN && status.done) await setField(item, statusField.id, status.done.id);
+  }
+
+  const inProgress = inColumn(status.inProgress).filter((i) => !isClosed(i));
   let inProgressCount = inProgress.length;
-  let inReviewCount = inColumn(status.inReview).length;
+  let inReviewCount = inColumn(status.inReview).filter((i) => !isClosed(i)).length;
   console.log(
     `In progress: ${inProgressCount}/${WIP_LIMIT}, In review: ${inReviewCount}/${REVIEW_LIMIT}`,
   );

@@ -287,9 +287,10 @@ pull request. Copy them into your repository and they become yours to change.
         and scores, and `src/midway/palette.ts` has its own scenery colors.
       - Not report values derived from the theme, test data in `game.test.ts`,
         or anything lint, the type-checker or tests already enforce.
-      - Be accurate about consequences. A game whose `game.ts` has no default
-        export gets no booth. A game whose `id` differs from its folder name
-        breaks the house rule, but nothing breaks for the player.
+      - Be accurate about consequences. If a game's `game.ts` has no default
+        export, or its `id` differs from its folder name, `src/games/index.ts`
+        throws when the midway loads, so the whole midway fails, not just that
+        booth. `src/games/index.test.ts` already fails on both.
    3. **Add `.tessl-code-review.yml`** at the root, listing all five lenses by
       local path (`./review-lenses/<lens-name>/SKILL.md`), with the house rules
       lens scoped to `globs: [src/games/**]`. Add `ignore: [.tessl/plugins/**]`
@@ -510,8 +511,13 @@ Pausing stops new runs. A run that has already started carries on until it
 finishes. To stop one sooner, run `tessl launch cancel <run id>`, or ask your
 agent.
 
+If you set up the [board queue](../docs/jit-board-queue.md) stretch, its
+outside scheduler keeps adding the label from your account while cards wait in
+**Ready**, so pausing Tessl's loops doesn't stop it. Pause or delete the job in
+your scheduler, or revoke its token.
+
 If you want to keep building your carnival, you can leave the label-to-pull
-request automation on: it only runs when you add the label. To switch
+request automation on: it only runs when the label is added. To switch
 everything off, ask your agent: **Switch off all my factory automations**.
 
 ## Words you'll hear
@@ -537,23 +543,23 @@ everything off, ask your agent: **Switch off all my factory automations**.
 
 ## If something goes wrong
 
-| Problem                                                       | Try                                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm ci` fails or Node is too old                             | Check `node --version` is 22.13 or later. If it isn't, install Node 24: `nvm install` reads the repo's `.nvmrc`.                                                                                                                                                |
-| No **Issues** tab, or no starter issues                       | Ask your agent to **Set up my fork**, or turn Issues on by hand: [Set up your fork](../README.md#set-up-your-fork).                                                                                                                                             |
-| Pull requests show no checks                                  | Ask your agent to **Set up my fork**, or enable workflows in your fork's **Actions** tab.                                                                                                                                                                       |
-| `tessl` isn't found, or came from npm                         | Install it with `curl -fsSL https://get.tessl.io \| sh`, or `winget install tessl.tessl` on Windows. If `npm ls -g @tessl/cli` lists the old npm copy, remove it first with `npm uninstall -g @tessl/cli`.                                                      |
-| `tessl` commands say you're not logged in                     | Run `tessl login`, then `tessl whoami` to check.                                                                                                                                                                                                                |
-| Your agent doesn't see a skill you just installed             | Restart your coding agent after `tessl install`.                                                                                                                                                                                                                |
-| Code review's findings on a pull request aren't getting fixed | Answer reviews only works on pull requests the factory opened, on `tessl/` branches. If your agent opened it, close it, file the change as an issue instead, and add the `tessl` label.                                                                         |
-| Your agent is very slow                                       | In Cursor, pick a model rather than Auto.                                                                                                                                                                                                                       |
-| A labeled issue hasn't started after 5 minutes                | Check the issue has the `tessl` label, that the Tessl GitHub App is installed on your fork, and that you have credits left.                                                                                                                                     |
-| Nothing starts, and everything looks set up                   | You may be out of credits. Run `tessl org usage` to check, and raise your hand: a facilitator can top you up. See [Credits](#credits).                                                                                                                          |
-| A loop ran but filed no issues                                | It probably has no environment, so its GitHub access is read-only. Pick an environment with **GitHub access** set to **Write**, then run it again: see [track B](#b-add-a-maintenance-loop).                                                                    |
-| Your carnival link shows a 404                                | Turn on Pages: ask your agent to **Set up my fork**, then wait a minute for the deploy.                                                                                                                                                                         |
-| Your laptop can't run the carnival                            | Play at your Pages link. To work on it, open your fork in GitHub Codespaces: **Code → Codespaces → Create codespace on main**, then run `npm run dev`. If **Set up my fork** hits a permissions error there, run `gh auth login` first.                         |
-| Someone else opened an issue or commented on your fork        | Ask your agent to **Set up my fork** again. It locks your fork down for six months, the longest GitHub allows, and rerunning it renews the lock.                                                                                                                |
-| You want to start over                                        | On your fork's GitHub page, select **Sync fork → Discard commits**, then in your clone run `git fetch origin` and `git reset --hard origin/main`. This removes your changes and your factory setup, so run [Set up your factory](#2-set-up-your-factory) again. |
+| Problem                                                       | Try                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm ci` fails or Node is too old                             | Check `node --version` is 22.13 or later. If it isn't, install Node 24: `nvm install` reads the repo's `.nvmrc`.                                                                                                                                                                                          |
+| No **Issues** tab, or no starter issues                       | Ask your agent to **Set up my fork**, or turn Issues on by hand: [Set up your fork](../README.md#set-up-your-fork).                                                                                                                                                                                       |
+| Pull requests show no checks                                  | Ask your agent to **Set up my fork**, or enable workflows in your fork's **Actions** tab.                                                                                                                                                                                                                 |
+| `tessl` isn't found, or came from npm                         | Install it with `curl -fsSL https://get.tessl.io \| sh`, or `winget install tessl.tessl` on Windows. If `npm ls -g @tessl/cli` lists the old npm copy, remove it first with `npm uninstall -g @tessl/cli`.                                                                                                |
+| `tessl` commands say you're not logged in                     | Run `tessl login`, then `tessl whoami` to check.                                                                                                                                                                                                                                                          |
+| Your agent doesn't see a skill you just installed             | Restart your coding agent after `tessl install`.                                                                                                                                                                                                                                                          |
+| Code review's findings on a pull request aren't getting fixed | Answer reviews only works on pull requests the factory opened, on `tessl/` branches. If your agent opened it, close it, file the change as an issue instead, and add the `tessl` label.                                                                                                                   |
+| Your agent is very slow                                       | In Cursor, pick a model rather than Auto.                                                                                                                                                                                                                                                                 |
+| A labeled issue hasn't started after 5 minutes                | Check the issue has the `tessl` label, that the Tessl GitHub App is installed on your fork, and that you have credits left.                                                                                                                                                                               |
+| Nothing starts, and everything looks set up                   | You may be out of credits. Run `tessl org usage` to check, and raise your hand: a facilitator can top you up. See [Credits](#credits).                                                                                                                                                                    |
+| A loop ran but filed no issues                                | It probably has no environment, so its GitHub access is read-only. Pick an environment with **GitHub access** set to **Write**, then run it again: see [track B](#b-add-a-maintenance-loop).                                                                                                              |
+| Your carnival link shows a 404                                | Turn on Pages: ask your agent to **Set up my fork**, then wait a minute for the deploy.                                                                                                                                                                                                                   |
+| Your laptop can't run the carnival                            | Play at your Pages link. To work on it, open your fork in GitHub Codespaces: **Code → Codespaces → Create codespace on main**, then run `npm run dev`. If **Set up my fork** hits a permissions error there, run `gh auth login` first.                                                                   |
+| Someone else opened an issue or commented on your fork        | Ask your agent to **Set up my fork** again. It locks your fork down for six months, the longest GitHub allows, and rerunning it renews the lock.                                                                                                                                                          |
+| You want to start over                                        | On your fork's GitHub page, select **Sync fork → Discard commits**, then in your clone run `git fetch origin` and `git reset --hard origin/main`. This removes your changes. The automations live in Tessl, so they stay on: to remove them, ask your agent to **Switch off all my factory automations**. |
 
 ## Learn more
 
