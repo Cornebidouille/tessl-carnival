@@ -1,11 +1,17 @@
-import { formatCarnivalTime, isOpen, partOfDay, type CarnivalTime } from './carnival';
+import {
+  currentSkin,
+  formatCarnivalTime,
+  isOpen,
+  partOfDay,
+  type CarnivalTime,
+  type SkinId,
+} from './carnival';
 
 /** Where the carnival is in its day, as far as starting a game goes. */
 export type OpeningState = 'open' | 'closing-soon' | 'closed';
 
 export const OPENS_AT = '06:00';
 export const CLOSES_AT = '02:00';
-export const CLOSED_MESSAGE = `The carnival is closed. It opens at ${OPENS_AT}.`;
 
 /** The last carnival hour before closing: 01:00 to 02:00. */
 const CLOSING_SOON_HOUR = 1;
@@ -27,9 +33,21 @@ export function clockLabel(time: CarnivalTime): string {
   return `${formatCarnivalTime(time)} · ${part[0].toUpperCase()}${part.slice(1)}`;
 }
 
+/** The message shown when someone tries to start a game while closed, in the skin's words. */
+export function closedMessage(skin: SkinId = currentSkin()): string {
+  return skin === 'christmas'
+    ? `The workshop is closed. The elves are asleep until ${OPENS_AT}.`
+    : `The carnival is closed. It opens at ${OPENS_AT}.`;
+}
+
 /** The line a booth card shows about opening hours, or nothing while the carnival is simply open. */
-export function boothHoursNote(state: OpeningState): string {
-  if (state === 'closed') return `Closed · opens at ${OPENS_AT}`;
-  if (state === 'closing-soon') return `Closing at ${CLOSES_AT}`;
+export function boothHoursNote(state: OpeningState, skin: SkinId = currentSkin()): string {
+  const christmas = skin === 'christmas';
+  if (state === 'closed') {
+    return christmas ? `Closed · the elves wake at ${OPENS_AT}` : `Closed · opens at ${OPENS_AT}`;
+  }
+  if (state === 'closing-soon') {
+    return christmas ? `The elves stop at ${CLOSES_AT}` : `Closing at ${CLOSES_AT}`;
+  }
   return '';
 }

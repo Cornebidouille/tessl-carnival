@@ -3,6 +3,8 @@ import {
   applyTheme,
   bestScore,
   currentCarnivalTime,
+  currentSkin,
+  setSkin,
   topScores,
   type CarnivalGame,
 } from './carnival';
@@ -12,14 +14,30 @@ import { startMidway } from './midway/midway';
 import type { BoothSlot } from './midway/world';
 import { carnivalLink, REPO_URL, shareLinks } from './share';
 import {
-  CLOSED_MESSAGE,
   boothHoursNote,
   canStartGame,
   clockLabel,
+  closedMessage,
   openingState,
 } from './opening-hours';
+import { faviconHref, otherSkin, skinText } from './skin-text';
 
 applyTheme();
+
+/** The skin the page loaded with. The switch saves the other one and reloads. */
+const skin = currentSkin();
+const text = skinText[skin];
+
+document.title = text.brand;
+document.querySelector('.brand')!.textContent = text.brand;
+document.querySelector<HTMLLinkElement>('link[rel="icon"]')!.href = faviconHref(text.favicon);
+const skinSwitch = document.querySelector<HTMLButtonElement>('.skin-switch')!;
+skinSwitch.textContent = text.switchText;
+skinSwitch.setAttribute('aria-label', text.switchLabel);
+skinSwitch.addEventListener('click', () => {
+  setSkin(otherSkin(skin));
+  location.reload();
+});
 
 const app = document.querySelector<HTMLElement>('#app')!;
 let stop: (() => void) | undefined;
@@ -40,7 +58,7 @@ function renderMidway(notice?: string) {
     <section class="midway">
       <p class="midway-clock" aria-label="Carnival time"></p>
       <p class="midway-notice" role="status" hidden></p>
-      <canvas class="midway-map" aria-label="The carnival midway. Walk up to a booth to play its game."></canvas>
+      <canvas class="midway-map"></canvas>
       <p class="midway-help">
         <kbd>WASD</kbd> or <kbd>arrows</kbd> to walk, or click where you want to go.
         <kbd>E</kbd> to play.
@@ -58,8 +76,8 @@ function renderMidway(notice?: string) {
           </span>
         </span>
       </p>
-      <nav class="midway-guide" aria-label="Booths">
-        <h2>Booths</h2>
+      <nav class="midway-guide">
+        <h2></h2>
         <ul></ul>
       </nav>
       <div class="booth-card" aria-live="polite" hidden>
@@ -71,6 +89,11 @@ function renderMidway(notice?: string) {
         <p class="hours"></p>
       </div>
     </section>`;
+
+  app.querySelector('.midway-map')!.setAttribute('aria-label', text.mapLabel);
+  const guideNav = app.querySelector('.midway-guide')!;
+  guideNav.setAttribute('aria-label', text.boothsHeading);
+  guideNav.querySelector('h2')!.textContent = text.boothsHeading;
 
   const link = carnivalLink(location.href);
   if (link) {
@@ -102,7 +125,7 @@ function renderMidway(notice?: string) {
   guide.addEventListener('click', (event) => {
     if (!(event.target as Element).closest('a') || canStartGame(currentCarnivalTime())) return;
     event.preventDefault();
-    showNotice(CLOSED_MESSAGE);
+    showNotice(closedMessage(skin));
   });
 
   const card = app.querySelector<HTMLElement>('.booth-card')!;
@@ -113,9 +136,8 @@ function renderMidway(notice?: string) {
     const game = booth?.gameId ? registry.get(booth.gameId) : undefined;
     card.hidden = booth === undefined;
     card.classList.toggle('closed', booth !== undefined && !game);
-    card.querySelector('h2')!.textContent = game?.name ?? 'Coming soon';
-    card.querySelector('.description')!.textContent =
-      game?.description ?? 'This booth is waiting for a game. Build one and it opens here.';
+    card.querySelector('h2')!.textContent = game?.name ?? text.comingSoon;
+    card.querySelector('.description')!.textContent = game?.description ?? text.emptyBooth;
     const { heading, scores } = game
       ? boothScores(topScores(game.id, BOOTH_SCORE_COUNT))
       : { heading: '', scores: [] };
@@ -130,7 +152,7 @@ function renderMidway(notice?: string) {
     const link = card.querySelector<HTMLAnchorElement>('.play')!;
     link.hidden = !game || state === 'closed';
     if (game) link.href = `#/play/${game.id}`;
-    card.querySelector('.hours')!.textContent = game ? boothHoursNote(state) : '';
+    card.querySelector('.hours')!.textContent = game ? boothHoursNote(state, skin) : '';
   };
 
   const clock = app.querySelector<HTMLElement>('.midway-clock')!;
@@ -165,11 +187,12 @@ function renderGame(game: CarnivalGame) {
   app.innerHTML = `
     <section class="game">
       <div class="game-header">
-        <a href="#/">← Back to the midway</a>
+        <a href="#/"></a>
         <h1></h1>
       </div>
       <canvas></canvas>
     </section>`;
+  app.querySelector('.game-header a')!.textContent = text.backLink;
   app.querySelector('h1')!.textContent = game.name;
   stop = game.start(app.querySelector('canvas')!);
 }
@@ -185,7 +208,7 @@ function route() {
   else {
     // A game's link opened while closed goes back to the midway. A round already running is left to finish.
     history.replaceState(null, '', '#/');
-    renderMidway(CLOSED_MESSAGE);
+    renderMidway(closedMessage(skin));
   }
 }
 
