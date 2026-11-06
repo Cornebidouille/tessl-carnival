@@ -58,7 +58,11 @@ function browserStorage(): SkinStorage {
 
 const skins = createSkinStore(browserStorage());
 
-/** The skin the page uses. `theme` resolves to it when the page loads. */
+/**
+ * The saved skin choice. `theme` resolves to it once, when the page loads, so
+ * after `setSkin` this reports the new choice while the page keeps the old skin
+ * until it reloads.
+ */
 export const currentSkin = skins.current;
 /** Remembers a skin. It takes effect on the next page load. */
 export const setSkin = skins.set;
