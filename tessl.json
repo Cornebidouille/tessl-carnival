@@ -32,7 +32,7 @@
         "Ticket to PR"
       ],
       "description": "Answer reviews and fix checks on Tessl's pull requests",
-      "instructions": "When you finish a round, if auto-merge is off on the pull request and it is not a draft, turn it back on with `gh pr merge <number> --auto --squash`. Never merge it yourself."
+      "instructions": "When you finish a round and auto-merge is off on a pull request that is not a draft, first read the pull request's timeline with `gh api repos/{owner}/{repo}/issues/<number>/timeline`. If the latest `auto_merge_disabled` event's actor is a person (not a bot), a maintainer is holding the pull request: leave auto-merge off and say so in your summary. Otherwise turn it back on with `gh pr merge <number> --auto --squash`. Never merge it yourself."
     },
     "follow-ticket-changes": {
       "skill": "tessl-labs/factory#follow-ticket-changes",
