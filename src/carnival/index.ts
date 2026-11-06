@@ -8,7 +8,16 @@ export {
   type ScoreEntry,
 } from './scores';
 export { prizeFor, type PrizeTier } from './prizes';
-export { theme, canvasFont, applyTheme } from './theme';
+export { theme, skins, canvasFont, applyTheme, type Theme } from './theme';
+export {
+  currentSkin,
+  setSkin,
+  createSkinStore,
+  isSkinId,
+  SKIN_IDS,
+  DEFAULT_SKIN,
+  type SkinId,
+} from './skin';
 export {
   carnivalTimeAt,
   partOfDay,
