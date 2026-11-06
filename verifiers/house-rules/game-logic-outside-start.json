@@ -1,0 +1,24 @@
+{
+  "name": "Scoring, movement and hits live in plain exported functions",
+  "instruction": "State changes in a game, such as scoring, moving and hit detection, MUST live in exported functions that take and return plain data and never touch the canvas, the DOM, `window`, `document`, `requestAnimationFrame` or `performance.now()`. `start` calls those functions and only draws and wires up input. It fails when the loop in `start` or an event handler adds to the score, moves things or checks for a hit itself, or when an exported logic function reaches for the DOM or the clock. Water cannon's `createState`, `fire`, `press`, `step`, `isHit` and `scoreForHit` must pass.",
+  "relevant_when": "The file is a game's `game.ts`. Return not applicable for test files.",
+  "context": "Vitest is the only test runner, and the cloud machine can't run browser tests, so logic written inside start can't be tested at all. House rule 4 in AGENTS.md.",
+  "scope": "file",
+  "scope_reason": "The logic functions and start sit in the same game.ts.",
+  "checklist": [
+    {
+      "name": "no-state-logic-in-start",
+      "rule": "start and its handlers don't compute score changes, positions or hits inline; they call exported functions for that."
+    },
+    {
+      "name": "logic-is-browser-free",
+      "rule": "Exported functions other than start don't touch the canvas, the DOM, window, document, requestAnimationFrame or the wall clock; time comes in as a parameter such as dt."
+    }
+  ],
+  "references": [
+    {
+      "file": "AGENTS.md",
+      "note": "House rule 4: game logic is testable without a browser."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "A game's start returns a cleanup that undoes everything it set up",
+  "instruction": "A carnival game's `start` MUST return a function that cancels its animation frame and removes every listener `start` added. A listener counts as removed when the returned function calls `removeEventListener` on the same target, with the same event name, the same function reference and the same capture flag (`true`, or `{ capture: true }`, must be matched on removal; other options such as `once` and `passive` don't matter), or when the listener was added with `{ signal }` from an `AbortController` that the returned function aborts. An inline arrow passed to `addEventListener` without a `signal` can never be removed, so it fails. `src/games/water-cannon/game.ts` (three listeners and one `requestAnimationFrame` loop, all undone in the function `start` returns) must pass.",
+  "relevant_when": "The file is a game's `game.ts` and defines a `start` function for a `CarnivalGame`.",
+  "context": "The midway starts and stops games as players walk between booths. A listener left behind keeps firing into a game that has closed, such as a Space key on the midway firing the water cannon, and a loop left running burns CPU on slow workshop laptops. House rule 5 in AGENTS.md.",
+  "scope": "file",
+  "scope_reason": "start, the listeners and timers it sets up, and the cleanup it returns are all in the one game.ts.",
+  "checklist": [
+    {
+      "name": "every-listener-removed",
+      "rule": "Every addEventListener call in start is undone by the returned function: either a removeEventListener call with the same target, event name, handler reference and capture flag, or an abort() on the AbortController whose signal was passed to addEventListener."
+    },
+    {
+      "name": "every-frame-and-timer-cancelled",
+      "rule": "Every requestAnimationFrame, setTimeout and setInterval that start schedules is cancelled in the returned function, using the handle from the latest call."
+    },
+    {
+      "name": "returns-cleanup",
+      "rule": "Every path through start that adds a listener or schedules a frame or timer ends by returning a cleanup function. Throwing before anything has been set up, such as when the canvas has no 2D context, passes, because there is nothing to clean up."
+    }
+  ],
+  "references": [
+    {
+      "file": "AGENTS.md",
+      "note": "House rule 5: start cleans up after itself."
+    }
+  ]
+}
