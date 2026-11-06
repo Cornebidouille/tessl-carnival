@@ -38,7 +38,7 @@
       "agent": "codex",
       "model": "gpt-6-luna",
       "tags": [
-        "bookkeeping"
+        "delivery"
       ],
       "description": "Keep Tessl's runs and pull requests in step with what people do to issues"
     },
