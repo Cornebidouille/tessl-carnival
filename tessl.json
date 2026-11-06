@@ -32,7 +32,7 @@
         "Ticket to PR"
       ],
       "description": "Answer reviews and fix checks on Tessl's pull requests",
-      "instructions": "When you finish a round and auto-merge is off on a pull request that is not a draft, first read the pull request's timeline with `gh api repos/{owner}/{repo}/issues/<number>/timeline`. If the latest `auto_merge_disabled` event's actor is a person (not a bot), a maintainer is holding the pull request: leave auto-merge off and say so in your summary. Otherwise turn it back on with `gh pr merge <number> --auto --squash`. Never merge it yourself."
+      "instructions": "When you finish a round and auto-merge is off on a pull request that is not a draft, first find who last turned it off, with one query that returns only the latest such event, so no pagination applies: `gh api graphql -f query='{repository(owner:\"<owner>\",name:\"<repo>\"){pullRequest(number:<number>){timelineItems(last:1,itemTypes:[AUTO_MERGE_DISABLED_EVENT]){nodes{... on AutoMergeDisabledEvent{actor{__typename login}}}}}}}'`. If that actor's `__typename` is `User`, a maintainer is holding the pull request: leave auto-merge off and say so in your summary. If the query fails, also leave it off. Only when the query succeeds and the actor is a `Bot`, or there is no such event, turn it back on with `gh pr merge <number> --auto --squash`. Never merge it yourself."
     },
     "follow-ticket-changes": {
       "skill": "tessl-labs/factory#follow-ticket-changes",
