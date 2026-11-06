@@ -1,4 +1,12 @@
-import { canvasFont, rankOf, recordScore, theme, type CarnivalGame } from '../../carnival';
+import {
+  canvasFont,
+  currentSkin,
+  rankOf,
+  recordScore,
+  theme,
+  type CarnivalGame,
+  type SkinId,
+} from '../../carnival';
 
 const { width: WIDTH, height: HEIGHT } = theme.canvas;
 
@@ -11,6 +19,48 @@ const RAILS = [
   { y: 290, speed: 60, radius: 34 },
 ];
 const TARGETS_PER_RAIL = 3;
+
+/** The toys on the Christmas skin's test rails, one kind per rail, top to bottom. */
+export const TOYS = ['present', 'soldier', 'bear'] as const;
+export type Toy = (typeof TOYS)[number];
+
+/** The words the game uses, which change with the skin. */
+export interface CannonLabels {
+  name: string;
+  description: string;
+  /** The counter's label, as in "Water 12/15". */
+  ammo: string;
+  gameOver: (score: number) => string;
+}
+
+/** Water Cannon on the carnival skin, Snowball Cannon on the Christmas skin. */
+export function labelsFor(skin: SkinId): CannonLabels {
+  if (skin === 'christmas') {
+    return {
+      name: 'Snowball Cannon',
+      description:
+        'Knock the toys off the test rails before your snowballs run out. Faster toys score more.',
+      ammo: 'Snowballs',
+      gameOver: (score) => `Out of snowballs! You scored ${score}`,
+    };
+  }
+  return {
+    name: 'Water Cannon',
+    description: 'Soak the targets before your tank runs dry. Faster targets score more.',
+    ammo: 'Water',
+    gameOver: (score) => `Tank empty! You scored ${score}`,
+  };
+}
+
+/** The toy a target is drawn as on the Christmas skin, picked by its rail. */
+export function toyFor(target: Pick<Target, 'y'>): Toy {
+  const rail = RAILS.findIndex((r) => r.y === target.y);
+  return TOYS[Math.max(rail, 0)] ?? TOYS[0];
+}
+
+// Picked once, when the module loads, as `theme` is.
+const skin = currentSkin();
+const labels = labelsFor(skin);
 
 export interface Target {
   x: number;
@@ -128,6 +178,102 @@ export function step(state: WaterCannonState, dt: number): void {
   if (state.tank === 0 && state.shots.length === 0) state.phase = 'over';
 }
 
+type Colors = typeof theme.colors;
+
+function drawRoundTarget(ctx: CanvasRenderingContext2D, colors: Colors, target: Target) {
+  ctx.fillStyle = colors.stripeB;
+  ctx.beginPath();
+  ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = colors.stripeA;
+  ctx.beginPath();
+  ctx.arc(target.x, target.y, target.radius * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = colors.stripeB;
+  ctx.beginPath();
+  ctx.arc(target.x, target.y, target.radius * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** Draws a toy that fits inside the target's hit circle. */
+function drawToy(ctx: CanvasRenderingContext2D, colors: Colors, target: Target) {
+  const { x, y, radius: r } = target;
+  const toy = toyFor(target);
+  if (toy === 'present') {
+    const side = r * 1.3;
+    ctx.fillStyle = colors.stripeA;
+    ctx.fillRect(x - side / 2, y - side / 2, side, side);
+    ctx.fillStyle = colors.accent;
+    ctx.fillRect(x - r * 0.12, y - side / 2, r * 0.24, side);
+    ctx.fillRect(x - side / 2, y - r * 0.12, side, r * 0.24);
+    disc(ctx, x - r * 0.25, y - side / 2 - r * 0.12, r * 0.2);
+    disc(ctx, x + r * 0.25, y - side / 2 - r * 0.12, r * 0.2);
+  } else if (toy === 'soldier') {
+    // Tall hat, face, red jacket with a white belt, dark legs.
+    ctx.fillStyle = colors.surface;
+    ctx.fillRect(x - r * 0.3, y - r * 0.95, r * 0.6, r * 0.45);
+    ctx.fillRect(x - r * 0.35, y + r * 0.4, r * 0.7, r * 0.55);
+    ctx.fillStyle = colors.stripeB;
+    disc(ctx, x, y - r * 0.32, r * 0.22);
+    ctx.fillStyle = colors.stripeA;
+    ctx.fillRect(x - r * 0.4, y - r * 0.1, r * 0.8, r * 0.5);
+    ctx.fillStyle = colors.stripeB;
+    ctx.fillRect(x - r * 0.4, y + r * 0.18, r * 0.8, r * 0.08);
+    ctx.fillStyle = colors.accent;
+    disc(ctx, x, y + r * 0.05, r * 0.06);
+  } else {
+    // Ears, body, head, muzzle.
+    ctx.fillStyle = colors.wood;
+    disc(ctx, x - r * 0.38, y - r * 0.62, r * 0.18);
+    disc(ctx, x + r * 0.38, y - r * 0.62, r * 0.18);
+    disc(ctx, x, y + r * 0.35, r * 0.5);
+    disc(ctx, x, y - r * 0.35, r * 0.4);
+    ctx.fillStyle = colors.muted;
+    disc(ctx, x, y - r * 0.25, r * 0.16);
+    ctx.fillStyle = colors.surface;
+    disc(ctx, x, y - r * 0.3, r * 0.06);
+    disc(ctx, x - r * 0.15, y - r * 0.45, r * 0.05);
+    disc(ctx, x + r * 0.15, y - r * 0.45, r * 0.05);
+  }
+}
+
+/** The carnival skin's striped tent wall. */
+function drawAwning(ctx: CanvasRenderingContext2D, colors: Colors) {
+  const stripe = WIDTH / 16;
+  for (let i = 0; i < 16; i++) {
+    ctx.fillStyle = i % 2 === 0 ? colors.stripeA : colors.stripeB;
+    ctx.fillRect(i * stripe, 0, stripe, 40);
+  }
+}
+
+/** The Christmas skin's workshop wall: wooden planks and a shelf with snow on it. */
+function drawWorkshopWall(ctx: CanvasRenderingContext2D, colors: Colors) {
+  ctx.fillStyle = colors.wood;
+  ctx.fillRect(0, 0, WIDTH, 40);
+  ctx.fillStyle = colors.surface;
+  const plank = WIDTH / 16;
+  for (let i = 1; i < 16; i++) ctx.fillRect(i * plank, 0, 2, 30);
+  ctx.fillRect(0, 30, WIDTH, 10);
+  ctx.fillStyle = colors.stripeB;
+  ctx.fillRect(0, 26, WIDTH, 5);
+  for (let x = plank / 4; x < WIDTH; x += plank / 2) disc(ctx, x, 27, 4);
+}
+
+/** A small burst of snow: flakes flying outwards from the hit. */
+function drawSnowBurst(ctx: CanvasRenderingContext2D, splash: Splash) {
+  const spread = 6 + splash.age * 90;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    disc(ctx, splash.x + Math.cos(angle) * spread, splash.y + Math.sin(angle) * spread, 3);
+  }
+}
+
 function draw(
   ctx: CanvasRenderingContext2D,
   state: WaterCannonState,
@@ -139,12 +285,8 @@ function draw(
   ctx.fillStyle = colors.background;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // Booth awning.
-  const stripe = WIDTH / 16;
-  for (let i = 0; i < 16; i++) {
-    ctx.fillStyle = i % 2 === 0 ? colors.stripeA : colors.stripeB;
-    ctx.fillRect(i * stripe, 0, stripe, 40);
-  }
+  if (skin === 'christmas') drawWorkshopWall(ctx, colors);
+  else drawAwning(ctx, colors);
 
   for (const rail of RAILS) {
     ctx.fillStyle = colors.wood;
@@ -152,34 +294,26 @@ function draw(
   }
 
   for (const target of state.targets) {
-    ctx.fillStyle = colors.stripeB;
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = colors.stripeA;
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.radius * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = colors.stripeB;
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.radius * 0.25, 0, Math.PI * 2);
-    ctx.fill();
+    if (skin === 'christmas') drawToy(ctx, colors, target);
+    else drawRoundTarget(ctx, colors, target);
   }
 
-  ctx.fillStyle = '#4fc3f7';
-  for (const shot of state.shots) {
-    ctx.beginPath();
-    ctx.arc(shot.x, shot.y, 5, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // Snowballs on the Christmas skin, water drops otherwise.
+  ctx.fillStyle = skin === 'christmas' ? colors.stripeB : colors.water;
+  for (const shot of state.shots) disc(ctx, shot.x, shot.y, 5);
 
   ctx.strokeStyle = colors.water;
+  ctx.fillStyle = colors.stripeB;
   ctx.lineWidth = 3;
   for (const splash of state.splashes) {
     ctx.globalAlpha = 1 - splash.age / 0.4;
-    ctx.beginPath();
-    ctx.arc(splash.x, splash.y, 10 + splash.age * 90, 0, Math.PI * 2);
-    ctx.stroke();
+    if (skin === 'christmas') {
+      drawSnowBurst(ctx, splash);
+    } else {
+      ctx.beginPath();
+      ctx.arc(splash.x, splash.y, 10 + splash.age * 90, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
   ctx.globalAlpha = 1;
 
@@ -201,7 +335,7 @@ function draw(
   ctx.textAlign = 'left';
   ctx.fillText(`Score ${state.score}`, 16, HEIGHT - 20);
   ctx.textAlign = 'right';
-  ctx.fillText(`Water ${state.tank}/${TANK_SIZE}`, WIDTH - 16, HEIGHT - 20);
+  ctx.fillText(`${labels.ammo} ${state.tank}/${TANK_SIZE}`, WIDTH - 16, HEIGHT - 20);
 
   if (state.phase === 'over') {
     ctx.fillStyle = colors.background;
@@ -211,7 +345,7 @@ function draw(
     ctx.textAlign = 'center';
     ctx.fillStyle = colors.accent;
     ctx.font = canvasFont('title', 'bold');
-    ctx.fillText(`Tank empty! You scored ${state.score}`, WIDTH / 2, HEIGHT / 2);
+    ctx.fillText(labels.gameOver(state.score), WIDTH / 2, HEIGHT / 2);
     if (place !== undefined) {
       ctx.fillStyle = colors.text;
       ctx.font = canvasFont('body', 'bold');
@@ -225,8 +359,8 @@ function draw(
 
 export const waterCannon: CarnivalGame = {
   id: 'water-cannon',
-  name: 'Water Cannon',
-  description: 'Soak the targets before your tank runs dry. Faster targets score more.',
+  name: labels.name,
+  description: labels.description,
 
   start(canvas) {
     const ctx = canvas.getContext('2d');

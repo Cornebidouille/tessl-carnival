@@ -2,6 +2,19 @@
 
 Soak the targets on the three rails before your tank runs dry.
 
+## Under the Christmas skin: Snowball Cannon
+
+With the Christmas skin, the game is **Snowball Cannon**: an elf tests the
+workshop's new toys by firing snowballs at them as they ride past. The targets
+are toys (wrapped presents on the top rail, wooden soldiers in the middle and
+teddy bears at the bottom), the shots are snowballs that burst into snow, and the
+booth is a workshop wall with a snowy shelf. The counter reads `Snowballs 12/15`
+and the game over line reads "Out of snowballs! You scored N".
+
+Only the look and the words change. The rules, the controls, the 15 shots, the
+rail speeds and the scoring below are the same under both skins, and so is the
+game's id, `water-cannon`, so scores from either skin go on the same board.
+
 ## How to play
 
 - Move the mouse to aim the cannon, and click or press Space to fire a shot of water.
@@ -26,6 +39,7 @@ water cannon scores: "New best!" for 1st place, otherwise "2nd best score",
 
 ## Files
 
-- `game.ts`: the game logic (`createState`, `fire`, `press`, `step`, `scoreForHit`, `placeText`) and the
+- `game.ts`: the game logic (`createState`, `fire`, `press`, `step`, `scoreForHit`, `placeText`,
+  `labelsFor`, `toyFor`) and the
   `waterCannon` entry, the default export the midway finds.
 - `game.test.ts`: tests for the game logic.
