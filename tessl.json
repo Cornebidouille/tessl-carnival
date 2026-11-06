@@ -3,7 +3,7 @@
   "mode": "managed",
   "dependencies": {
     "tessl-labs/factory-setup": {
-      "version": "0.13.0"
+      "version": "0.24.1"
     }
   },
   "agents": [
@@ -93,12 +93,7 @@
         },
         "event.pull_request.head.repo.id": 1429704247,
         "event.pull_request.state": "open",
-        "event.sender.id": {
-          "in": [
-            14827655,
-            325629464
-          ]
-        }
+        "event.sender.id": 14827655
       },
       "concurrency": {
         "debounce": "90s",
@@ -158,63 +153,6 @@
         "keys": [
           {
             "key": "shepherd:{{ event.issue.number }}",
-            "limit": 1
-          }
-        ]
-      },
-      "action": "shepherd"
-    },
-    "shepherd-checks-failed": {
-      "on": [
-        "github:check_run.completed"
-      ],
-      "when": {
-        "event.check_run.pull_requests.0.number": {
-          "exists": true
-        },
-        "event.check_run.pull_requests.0.head.repo.id": 1429704247,
-        "event.check_run.check_suite.head_branch": {
-          "matches": "^tessl/"
-        },
-        "event.check_run.conclusion": {
-          "in": [
-            "failure",
-            "timed_out",
-            "startup_failure",
-            "action_required"
-          ]
-        }
-      },
-      "concurrency": {
-        "debounce": "90s",
-        "keys": [
-          {
-            "key": "shepherd:{{ event.check_run.pull_requests.0.number }}",
-            "limit": 1
-          }
-        ]
-      },
-      "action": "shepherd"
-    },
-    "shepherd-checks-passed": {
-      "on": [
-        "github:check_suite.completed"
-      ],
-      "when": {
-        "event.check_suite.pull_requests.0.number": {
-          "exists": true
-        },
-        "event.check_suite.pull_requests.0.head.repo.id": 1429704247,
-        "event.check_suite.head_branch": {
-          "matches": "^tessl/"
-        },
-        "event.check_suite.conclusion": "success"
-      },
-      "concurrency": {
-        "debounce": "90s",
-        "keys": [
-          {
-            "key": "shepherd:{{ event.check_suite.pull_requests.0.number }}",
             "limit": 1
           }
         ]
