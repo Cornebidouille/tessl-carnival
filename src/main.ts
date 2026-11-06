@@ -54,8 +54,6 @@ function renderMidway(notice?: string) {
           <a href="${REPO_URL}" target="_blank" rel="noopener">Build your own</a>
           <span class="midway-share" hidden>
             · Share on
-            <a class="share-x" target="_blank" rel="noopener">X</a>
-            or
             <a class="share-linkedin" target="_blank" rel="noopener">LinkedIn</a>
           </span>
         </span>
@@ -77,7 +75,6 @@ function renderMidway(notice?: string) {
   const link = carnivalLink(location.href);
   if (link) {
     const share = shareLinks(link);
-    app.querySelector<HTMLAnchorElement>('.share-x')!.href = share.x;
     app.querySelector<HTMLAnchorElement>('.share-linkedin')!.href = share.linkedIn;
     app.querySelector<HTMLElement>('.midway-share')!.hidden = false;
   }

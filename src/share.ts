@@ -1,9 +1,6 @@
 /** The original carnival, where anyone can fork their own. */
 export const REPO_URL = 'https://github.com/tesslio/tessl-carnival';
 
-const SHARE_TEXT =
-  'I built a software factory on a browser carnival at AI DevCon NYC with @tessl_io. Play my carnival:';
-
 /**
  * The address to share for the carnival at `href`: the page itself, without
  * the game route or query. Returns undefined where a link would be no use to
@@ -17,10 +14,9 @@ export function carnivalLink(href: string): string | undefined {
   return `${url.origin}${url.pathname}`;
 }
 
-/** Prefilled posts that share a carnival's link on X and LinkedIn. */
+/** A prefilled post that shares a carnival's link on LinkedIn. */
 export function shareLinks(link: string) {
   return {
-    x: `https://x.com/intent/post?${new URLSearchParams({ text: SHARE_TEXT, url: link })}`,
     linkedIn: `https://www.linkedin.com/sharing/share-offsite/?${new URLSearchParams({ url: link })}`,
   };
 }
