@@ -10,6 +10,7 @@ import { BOOTH_SCORE_COUNT, NO_SCORES, boothScores } from './booth-scores';
 import { registry } from './games';
 import { startMidway } from './midway/midway';
 import type { BoothSlot } from './midway/world';
+import { carnivalLink, REPO_URL, shareLinks } from './share';
 import {
   CLOSED_MESSAGE,
   boothHoursNote,
@@ -49,6 +50,15 @@ function renderMidway(notice?: string) {
         <a href="https://tessl.io/?utm_source=carnival&amp;utm_medium=midway-credit&amp;utm_campaign=tessl-carnival" target="_blank" rel="noopener">Tessl</a>
         at
         <a href="https://tessl.io/devcon?utm_source=carnival&amp;utm_medium=midway-credit&amp;utm_campaign=tessl-carnival" target="_blank" rel="noopener">AI DevCon NYC</a>
+        <span class="midway-links">
+          <a href="${REPO_URL}" target="_blank" rel="noopener">Build your own</a>
+          <span class="midway-share" hidden>
+            · Share on
+            <a class="share-x" target="_blank" rel="noopener">X</a>
+            or
+            <a class="share-linkedin" target="_blank" rel="noopener">LinkedIn</a>
+          </span>
+        </span>
       </p>
       <nav class="midway-guide" aria-label="Booths">
         <h2>Booths</h2>
@@ -63,6 +73,14 @@ function renderMidway(notice?: string) {
         <p class="hours"></p>
       </div>
     </section>`;
+
+  const link = carnivalLink(location.href);
+  if (link) {
+    const share = shareLinks(link);
+    app.querySelector<HTMLAnchorElement>('.share-x')!.href = share.x;
+    app.querySelector<HTMLAnchorElement>('.share-linkedin')!.href = share.linkedIn;
+    app.querySelector<HTMLElement>('.midway-share')!.hidden = false;
+  }
 
   const guide = app.querySelector('.midway-guide ul')!;
   for (const game of registry.all()) {

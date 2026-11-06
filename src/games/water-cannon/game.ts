@@ -297,3 +297,5 @@ export const waterCannon: CarnivalGame = {
     };
   },
 };
+
+export default waterCannon;

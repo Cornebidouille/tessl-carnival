@@ -3,7 +3,7 @@
   "mode": "managed",
   "dependencies": {
     "tessl-labs/factory-setup": {
-      "version": "0.13.0"
+      "version": "0.24.1"
     }
   },
   "agents": [
