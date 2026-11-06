@@ -210,8 +210,7 @@ Show people where yours went:
 - **Post it in [Show your carnival](https://github.com/tesslio/tessl-carnival/discussions/13)** as soon as you finish the core
   path, so the room can see how everyone's doing: your carnival's link, what
   your factory built, and one thing it got right and one it got wrong.
-- **Share it on [X](https://x.com/intent/post?text=I%20built%20a%20software%20factory%20on%20a%20browser%20carnival%20at%20AI%20DevCon%20NYC%20with%20%40tessl_io&url=https%3A%2F%2Fgithub.com%2Ftesslio%2Ftessl-carnival)
-  or [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Ftesslio%2Ftessl-carnival):**
+- **Share it on [LinkedIn](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Ftesslio%2Ftessl-carnival):**
   add your carnival's link and tag Tessl, so we can see what you built.
 - **Star this repo** if it helped, so other people find it.
 
@@ -276,8 +275,8 @@ use, including Claude Code, Cursor and Codex.
   [podcast](https://tessl.io/podcast?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival).
 - **Talk to us:** [Discord](https://discord.com/invite/jbb2vHnHZQ?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival), or come to the next
   [AI DevCon](https://tessl.io/devcon?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival).
-- **Follow along:** [LinkedIn](https://linkedin.com/company/tesslio/),
-  [X](https://x.com/tessl_io) and [YouTube](https://www.youtube.com/@tessl-ai).
+- **Follow along:** [LinkedIn](https://linkedin.com/company/tesslio/) and
+  [YouTube](https://www.youtube.com/@tessl-ai).
 
 ## License
 

@@ -16,14 +16,11 @@ describe('carnivalLink', () => {
 });
 
 describe('shareLinks', () => {
-  it('puts the carnival link in both posts', () => {
+  it('puts the carnival link in the LinkedIn post', () => {
     const links = shareLinks('https://ada.github.io/tessl-carnival/');
-    const x = new URL(links.x);
-    expect(x.hostname).toBe('x.com');
-    expect(x.searchParams.get('url')).toBe('https://ada.github.io/tessl-carnival/');
-    expect(x.searchParams.get('text')).toContain('@tessl_io');
-    expect(new URL(links.linkedIn).searchParams.get('url')).toBe(
-      'https://ada.github.io/tessl-carnival/',
-    );
+    expect(Object.keys(links)).toEqual(['linkedIn']);
+    const linkedIn = new URL(links.linkedIn);
+    expect(linkedIn.hostname).toBe('www.linkedin.com');
+    expect(linkedIn.searchParams.get('url')).toBe('https://ada.github.io/tessl-carnival/');
   });
 });
