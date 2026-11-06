@@ -55,24 +55,42 @@ workshop/
 docs/midway.jpg           the screenshot at the top of the README
 docs/social-preview.jpg   the 1280x640 image for link previews and GitHub's social preview
 docs/jit-board-queue.md   the design for the workshop's advanced stretch
+skills/                   skills for agents: add a game, set up a fork, check readiness
 tessl-factory/skills/     sample skills for maintenance loops
 .tessl-code-review.yml    which review lenses Tessl Code Review runs
 review-lenses/            those lenses: the default four, copied, and the house rules
 src/
   main.ts                 the router (#/play/<game-id>) and the midway's overlay
+  style.css               the page styles, using the theme's CSS variables
+  opening-hours.ts        the opening state, canStartGame, the clock label and the booth card's hours note
+  opening-hours.test.ts
+  booth-scores.ts         the scores a booth card shows
+  booth-scores.test.ts
+  share.ts                the link and text for sharing the carnival
+  share.test.ts
   midway/                 the walkable midway map
     world.ts              layout, movement and pathfinding (plain functions)
     world.test.ts
     render.ts             drawing the scenery, booths and people
     palette.ts            the map's scenery colours, built on the theme
+    daylight.ts           mixing the sky and light through the day
+    daylight.test.ts
     midway.ts             input, camera and the animation loop
+    aidevcon-banner.png   the banner image render.ts draws
   carnival/               shared base every game uses
+    index.ts              the barrel games import from (`src/carnival`)
     registry.ts           the CarnivalGame shape and the registry
+    registry.test.ts
     scores.ts             recordScore, bestScore, topScores
+    scores.test.ts
     prizes.ts             prize tiers
+    prizes.test.ts
+    clock.ts              the carnival clock: carnivalTimeAt, partOfDay, isOpen
+    clock.test.ts
     theme.ts              colours, fonts and sizes
   games/
     index.ts              finds every game folder and registers it
+    index.test.ts         checks every game folder is registered
     water-cannon/         the finished game, and the pattern to copy
       game.ts
       game.test.ts
