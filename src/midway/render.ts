@@ -390,6 +390,22 @@ const BLUE: Stripes = {
 };
 const TENT_COLORS = [GOLD, BLUE, BLUE, RED] as const;
 
+/** Under the Christmas skin, the midway's buildings become Santa's workshop. */
+const NORTH_POLE = currentSkin() === 'christmas';
+
+const CANDY: Stripes = {
+  a: palette.red,
+  aShade: palette.redShade,
+  b: palette.snow,
+  bShade: palette.snowShade,
+};
+const PINE: Stripes = {
+  a: palette.hedge,
+  aShade: palette.hedgeDark,
+  b: palette.hedgeLight,
+  bShade: palette.hedge,
+};
+
 function rimPoint(c: Pt, r: number, angle: number, z: number): Pt {
   return [c[0] + Math.cos(angle) * r * ISO_RX, c[1] + Math.sin(angle) * r * ISO_RY - z];
 }
@@ -642,11 +658,250 @@ function carousel(ctx: Ctx, prop: Prop, t: number) {
   flag(ctx, c[0], c[1] - roofZ - 28, t, palette.gold);
 }
 
+// ── The North Pole: Santa's workshop, gingerbread houses, the big tree ────
+
+/** A five-pointed star centred on (x, y). */
+function star(ctx: Ctx, x: number, y: number, r: number, color: string) {
+  const points: Pt[] = [];
+  for (let i = 0; i < 10; i++) {
+    const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+    const reach = i % 2 ? r * 0.45 : r;
+    points.push([x + Math.cos(angle) * reach, y + Math.sin(angle) * reach]);
+  }
+  poly(ctx, points, color);
+}
+
+/** Under the Christmas skin the carousel is a big Christmas tree, turning slowly. */
+function christmasTree(ctx: Ctx, prop: Prop, t: number) {
+  const c = at(prop.x + prop.w / 2, prop.y + prop.h / 2);
+  const turn = t * 0.5;
+  const r = 1.75;
+  oval(ctx, c[0] + 8, c[1] + 4, r * ISO_RX * 1.1, r * ISO_RY * 1.1, palette.shadow);
+  cylinder(ctx, c, r, 0, 6, CANDY, 24);
+  oval(ctx, c[0], c[1] - 6, r * ISO_RX, r * ISO_RY, palette.snow);
+  poly(
+    ctx,
+    [
+      [c[0] - 4, c[1] - 6],
+      [c[0] + 4, c[1] - 6],
+      [c[0] + 4, c[1] - 16],
+      [c[0] - 4, c[1] - 16],
+    ],
+    palette.woodDark,
+  );
+  const tiers = [
+    { r: 1.55, z: 12, h: 24 },
+    { r: 1.2, z: 28, h: 22 },
+    { r: 0.85, z: 44, h: 20 },
+    { r: 0.5, z: 58, h: 18 },
+  ];
+  tiers.forEach((tier, n) => {
+    dome(ctx, c, tier.r, tier.z, tier.h, PINE, turn + n * 0.4, 12);
+    // Baubles round the front of each tier, turning with the tree.
+    for (let k = 0; k < 6; k++) {
+      const angle = turn + n * 0.7 + (k / 6) * Math.PI * 2;
+      if (Math.sin(angle) <= 0) continue;
+      const [bx, by] = rimPoint(c, tier.r * 0.92, angle, tier.z);
+      oval(ctx, bx, by + 1.5, 2.2, 2.2, palette.balloons[(k + n) % palette.balloons.length]);
+      oval(ctx, bx - 0.7, by + 0.8, 0.7, 0.7, palette.white);
+    }
+  });
+  const top = c[1] - 58 - 18;
+  star(ctx, c[0], top - 3, 7 + Math.sin(t * 3) * 0.6, palette.gold);
+  oval(ctx, c[0], top - 3, 1.6, 1.6, palette.cream);
+}
+
+interface HouseColors {
+  wall: string;
+  wallShade: string;
+  roof: string;
+  roofShade: string;
+  /** The window frames and the trim hanging from the eave. */
+  trim: string;
+}
+
+/**
+ * A house with a gabled roof running along the x axis, snow along the ridge,
+ * a door on the gable end and a row of lit windows along the front.
+ */
+function house(
+  ctx: Ctx,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  wall: number,
+  roof: number,
+  windows: number,
+  colors: HouseColors,
+) {
+  const ym = (y0 + y1) / 2;
+  const eave = 0.18;
+  poly(ctx, rectPoints({ x: x0 + 0.3, y: y0 + 0.3, w: x1 - x0, h: y1 - y0 }), palette.shadow);
+  // The back of the roof, mostly hidden behind the front.
+  poly(
+    ctx,
+    [
+      at(x0 - 0.1, y0 - eave, wall - 3),
+      at(x1 + 0.1, y0 - eave, wall - 3),
+      at(x1 + 0.1, ym, wall + roof),
+      at(x0 - 0.1, ym, wall + roof),
+    ],
+    colors.roofShade,
+  );
+  box(ctx, x0, y0, x1 - x0, y1 - y0, 0, wall, colors.wall, colors.wall, colors.wallShade);
+  poly(ctx, [at(x1, y1, wall), at(x1, y0, wall), at(x1, ym, wall + roof)], colors.wallShade);
+
+  // The door on the gable end, and a round window above it.
+  poly(
+    ctx,
+    [
+      at(x1, ym + 0.3, 0),
+      at(x1, ym - 0.3, 0),
+      at(x1, ym - 0.3, wall * 0.65),
+      at(x1, ym + 0.3, wall * 0.65),
+    ],
+    colors.trim,
+  );
+  poly(
+    ctx,
+    [
+      at(x1, ym + 0.24, 0),
+      at(x1, ym - 0.24, 0),
+      at(x1, ym - 0.24, wall * 0.6),
+      at(x1, ym + 0.24, wall * 0.6),
+    ],
+    palette.woodDark,
+  );
+  const round = at(x1, ym, wall + roof * 0.35);
+  oval(ctx, round[0], round[1], 4.5, 5, colors.trim);
+  oval(ctx, round[0], round[1], 3.2, 3.7, palette.glow);
+
+  // Lit windows along the front.
+  const za = wall * 0.35;
+  const zb = wall * 0.75;
+  for (let i = 0; i < windows; i++) {
+    const xa = lerp(x0, x1, (i + 0.25) / windows);
+    const xb = lerp(x0, x1, (i + 0.75) / windows);
+    poly(
+      ctx,
+      [
+        at(xa - 0.05, y1, za - 2),
+        at(xb + 0.05, y1, za - 2),
+        at(xb + 0.05, y1, zb + 2),
+        at(xa - 0.05, y1, zb + 2),
+      ],
+      colors.trim,
+    );
+    poly(ctx, [at(xa, y1, za), at(xb, y1, za), at(xb, y1, zb), at(xa, y1, zb)], palette.glow);
+    const xm = (xa + xb) / 2;
+    stroke(ctx, [at(xm, y1, za), at(xm, y1, zb)], colors.trim, 1);
+    stroke(ctx, [at(xa, y1, (za + zb) / 2), at(xb, y1, (za + zb) / 2)], colors.trim, 1);
+  }
+
+  // The front of the roof, its gable edge, and snow along the ridge.
+  poly(
+    ctx,
+    [
+      at(x0 - 0.1, y1 + eave, wall - 3),
+      at(x1 + 0.1, y1 + eave, wall - 3),
+      at(x1 + 0.1, ym, wall + roof),
+      at(x0 - 0.1, ym, wall + roof),
+    ],
+    colors.roof,
+  );
+  poly(
+    ctx,
+    [
+      at(x1 + 0.1, y1 + eave, wall - 3),
+      at(x1 + 0.1, ym, wall + roof),
+      at(x1 + 0.1, ym, wall + roof - 2),
+      at(x1 + 0.1, y1 + eave, wall - 5),
+    ],
+    colors.roofShade,
+  );
+  const ys = lerp(ym, y1 + eave, 0.45);
+  const zs = lerp(wall + roof, wall - 3, 0.45);
+  const drift: Pt[] = [];
+  for (let i = 0; i <= 10; i++)
+    drift.push(at(lerp(x1 + 0.1, x0 - 0.1, i / 10), ys, zs + (i % 2 ? 2 : -1)));
+  poly(
+    ctx,
+    [at(x0 - 0.1, ym, wall + roof + 1.5), at(x1 + 0.1, ym, wall + roof + 1.5), ...drift],
+    palette.snow,
+  );
+  scallops(ctx, { x: x0 - 0.1, y: y1 + eave }, { x: x1 + 0.1, y: y1 + eave }, wall - 3, 12, 2.5, [
+    colors.trim,
+  ]);
+}
+
+/** Under the Christmas skin the big top is Santa's workshop hall, smoke rising from its chimney. */
+function workshopHall(ctx: Ctx, prop: Prop, t: number) {
+  const x0 = prop.x + 0.3;
+  const x1 = prop.x + prop.w - 0.3;
+  const y0 = prop.y + 0.45;
+  const y1 = prop.y + prop.h - 0.45;
+  const ym = (y0 + y1) / 2;
+  const wall = 34;
+  const roof = 30;
+  house(ctx, x0, y0, x1, y1, wall, roof, 4, {
+    wall: palette.wood,
+    wallShade: palette.woodDark,
+    roof: palette.red,
+    roofShade: palette.redShade,
+    trim: palette.snow,
+  });
+  // A stone chimney on the front of the roof, capped with snow.
+  const cx = x0 + 0.5;
+  box(
+    ctx,
+    cx,
+    ym + 0.1,
+    0.4,
+    0.35,
+    wall + roof * 0.6,
+    roof * 0.4 + 12,
+    palette.snow,
+    palette.creamShade,
+    palette.metalShade,
+  );
+  const [sx, sy] = at(cx + 0.2, ym + 0.27, wall + roof + 14);
+  ctx.save();
+  const fade = ctx.globalAlpha;
+  for (let i = 0; i < 3; i++) {
+    const rise = (t * 0.4 + i / 3) % 1;
+    ctx.globalAlpha = fade * (1 - rise);
+    oval(ctx, sx + rise * 8, sy - rise * 24, 2 + rise * 4, 2 + rise * 4, palette.cloudShade);
+  }
+  ctx.restore();
+}
+
+/** Under the Christmas skin a round tent is a gingerbread house with icing trim. */
+function gingerbreadHouse(ctx: Ctx, prop: Prop) {
+  const cx = prop.x + prop.w / 2;
+  const cy = prop.y + prop.h / 2;
+  const x0 = cx - 1.3;
+  const x1 = cx + 1.3;
+  const y1 = cy + 1;
+  house(ctx, x0, cy - 1, x1, y1, 26, 30, 2, {
+    wall: palette.gingerbread,
+    wallShade: palette.gingerbreadShade,
+    roof: palette.gingerbread,
+    roofShade: palette.gingerbreadShade,
+    trim: palette.snow,
+  });
+  // Gumdrops along the front wall.
+  for (let i = 0; i < 5; i++) {
+    const [gx, gy] = at(lerp(x0 + 0.2, x1 - 0.2, i / 4), y1, 3);
+    oval(ctx, gx, gy, 2.4, 2, palette.balloons[(i + prop.variant) % palette.balloons.length]);
+  }
+}
+
 // ── Square things ─────────────────────────────────────────────────────────
 
 /** A tent with a ridged roof running along the x axis. */
 function peakedTent(ctx: Ctx, prop: Prop, t: number) {
-  const colors = prop.variant % 2 === 0 ? BLUE : RED;
+  const colors = NORTH_POLE ? CANDY : prop.variant % 2 === 0 ? BLUE : RED;
   const x0 = prop.x + 0.2;
   const x1 = prop.x + prop.w - 0.2;
   const y0 = prop.y + 0.25;
@@ -737,6 +992,87 @@ function wheel(ctx: Ctx, x: number, y: number, r: number) {
   oval(ctx, x, y, r, r, palette.woodDark);
   oval(ctx, x, y, r * 0.65, r * 0.65, palette.gold);
   oval(ctx, x, y, r * 0.25, r * 0.25, palette.woodDark);
+}
+
+/** A sled's runner along one side, from `x0` to `x1`, curling up at the front. */
+function runner(ctx: Ctx, x0: number, x1: number, y: number, z: number) {
+  for (const sx of [lerp(x0, x1, 0.25), lerp(x0, x1, 0.75)])
+    stroke(ctx, [at(sx, y, z), at(sx, y, 1)], palette.woodDark, 1.6);
+  stroke(
+    ctx,
+    [
+      at(x0 - 0.05, y, 1),
+      at(x1, y, 1),
+      at(x1 + 0.12, y, 2.5),
+      at(x1 + 0.15, y, 6),
+      at(x1 + 0.08, y, 8),
+    ],
+    palette.gold,
+    1.8,
+  );
+}
+
+/** A present: a box with a ribbon round it and a bow on top, centred on (x, y). */
+function present(ctx: Ctx, x: number, y: number, w: number, h: number, color: string) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x - w / 2, y - h / 2, w, h, 1);
+  ctx.fill();
+  const ribbon = color === palette.gold ? palette.red : palette.gold;
+  poly(
+    ctx,
+    [
+      [x - 1, y - h / 2],
+      [x + 1, y - h / 2],
+      [x + 1, y + h / 2],
+      [x - 1, y + h / 2],
+    ],
+    ribbon,
+  );
+  poly(
+    ctx,
+    [
+      [x - w / 2, y - 1],
+      [x + w / 2, y - 1],
+      [x + w / 2, y + 1],
+      [x - w / 2, y + 1],
+    ],
+    ribbon,
+  );
+  oval(ctx, x - 1.8, y - h / 2 - 1, 1.8, 1.2, ribbon);
+  oval(ctx, x + 1.8, y - h / 2 - 1, 1.8, 1.2, ribbon);
+}
+
+/** The colours presents come in, round the midway. */
+const PRESENTS = [palette.red, palette.hedgeLight, palette.blue, palette.gold, palette.cream];
+
+/** Under the Christmas skin a wagon is a sled: a red body on runners, piled with presents. */
+function sled(ctx: Ctx, prop: Prop) {
+  const x = prop.x + 0.2;
+  const y = prop.y + 0.1;
+  const w = prop.w - 0.5;
+  const d = prop.h - 0.25;
+  const body =
+    prop.variant % 2 === 0
+      ? { left: palette.red, right: palette.redShade }
+      : { left: palette.hedgeLight, right: palette.hedge };
+  poly(ctx, rectPoints({ x: x + 0.3, y: y + 0.3, w, h: d }), palette.shadow);
+  runner(ctx, x, x + w, y + 0.08, 7);
+  box(ctx, x, y, w, d, 7, 10, body.left, body.left, body.right);
+  // A tall curved back at the rear, and gold trim along the side.
+  box(ctx, x, y, 0.3, d, 17, 12, body.left, body.left, body.right);
+  poly(
+    ctx,
+    [at(x + 0.3, y + d, 15), at(x + w, y + d, 15), at(x + w, y + d, 17), at(x + 0.3, y + d, 17)],
+    palette.gold,
+  );
+  // Presents piled on the seat.
+  for (let i = 0; i < 3; i++) {
+    const [px, py] = at(lerp(x + 0.7, x + w - 0.3, i / 2), y + d / 2, 17);
+    const size = 9 - (i % 2) * 2;
+    present(ctx, px, py - size / 2, size, size, PRESENTS[(i + prop.variant) % PRESENTS.length]);
+  }
+  runner(ctx, x, x + w, y + d + 0.02, 7);
 }
 
 function wagon(ctx: Ctx, prop: Prop) {
@@ -1136,8 +1472,12 @@ function cart(ctx: Ctx, prop: Prop, t: number) {
         : { top: palette.cream, left: palette.blue, right: palette.blueShade };
   box(ctx, x, y, w, d, 5, 14, body.top, body.left, body.right);
   stripedWall(ctx, { x, y: y + d }, { x: x + w, y: y + d }, 9, 3, 6, [palette.cream, body.left]);
-  const wheelAt = at(x + w * 0.3, y + d + 0.02, 5);
-  wheel(ctx, wheelAt[0], wheelAt[1], 5);
+  if (NORTH_POLE) {
+    runner(ctx, x, x + w, y + d + 0.02, 5);
+  } else {
+    const wheelAt = at(x + w * 0.3, y + d + 0.02, 5);
+    wheel(ctx, wheelAt[0], wheelAt[1], 5);
+  }
   const top = at(x + w / 2, y + d / 2, 19);
 
   if (kind === 0) {
@@ -1264,6 +1604,68 @@ function ticketBooth(ctx: Ctx, prop: Prop) {
   box(ctx, x - 0.05, y - 0.05, 0.8, 0.8, 26, 3, palette.blue, palette.blueShade, palette.blueShade);
   onPlane(ctx, at(x + 0.35, y + 0.35, 38), () =>
     signBoard(ctx, 'TICKETS', 28, 9, { board: palette.gold, edge: palette.red, text: palette.red }),
+  );
+}
+
+/** Under the Christmas skin the ticket booth is a post office for letters to Santa. */
+function postOffice(ctx: Ctx, prop: Prop) {
+  const x = prop.x + 0.15;
+  const y = prop.y + 0.15;
+  poly(ctx, rectPoints({ x: x + 0.2, y: y + 0.2, w: 0.7, h: 0.7 }), palette.shadow);
+  box(ctx, x, y, 0.7, 0.7, 0, 26, palette.snow, palette.red, palette.redShade);
+  poly(
+    ctx,
+    [
+      at(x + 0.15, y + 0.7, 12),
+      at(x + 0.55, y + 0.7, 12),
+      at(x + 0.55, y + 0.7, 20),
+      at(x + 0.15, y + 0.7, 20),
+    ],
+    palette.glow,
+  );
+  // The letter slot under the window, and a letter on the side wall.
+  poly(
+    ctx,
+    [
+      at(x + 0.2, y + 0.7, 6),
+      at(x + 0.5, y + 0.7, 6),
+      at(x + 0.5, y + 0.7, 8),
+      at(x + 0.2, y + 0.7, 8),
+    ],
+    palette.belt,
+  );
+  poly(
+    ctx,
+    [
+      at(x + 0.7, y + 0.55, 9),
+      at(x + 0.7, y + 0.15, 9),
+      at(x + 0.7, y + 0.15, 17),
+      at(x + 0.7, y + 0.55, 17),
+    ],
+    palette.snow,
+  );
+  stroke(
+    ctx,
+    [at(x + 0.7, y + 0.55, 17), at(x + 0.7, y + 0.35, 13), at(x + 0.7, y + 0.15, 17)],
+    palette.redShade,
+    1,
+  );
+  for (let i = 0; i < 6; i++) {
+    const xa = lerp(x - 0.05, x + 0.75, i / 6);
+    const xb = lerp(x - 0.05, x + 0.75, (i + 1) / 6);
+    poly(
+      ctx,
+      [at(xa, y + 0.7, 23), at(xb, y + 0.7, 23), at(xb, y + 0.95, 17), at(xa, y + 0.95, 17)],
+      i % 2 ? palette.snow : palette.hedgeLight,
+    );
+  }
+  box(ctx, x - 0.05, y - 0.05, 0.8, 0.8, 26, 3, palette.snow, palette.snowShade, palette.snowShade);
+  onPlane(ctx, at(x + 0.35, y + 0.35, 38), () =>
+    signBoard(ctx, 'LETTERS TO SANTA', 34, 10, {
+      board: palette.snow,
+      edge: palette.red,
+      text: palette.red,
+    }),
   );
 }
 
@@ -1541,6 +1943,10 @@ function ferrisWheel(ctx: Ctx, prop: Prop, t: number) {
           palette.metalShade,
           1,
         );
+        if (NORTH_POLE) {
+          present(ctx, gx, gy + 8, 10, 8, PRESENTS[i % PRESENTS.length]);
+          continue;
+        }
         ctx.fillStyle = palette.red;
         ctx.beginPath();
         ctx.roundRect(gx - 5, gy + 4, 10, 8, 2);
@@ -1569,7 +1975,16 @@ function ferrisWheel(ctx: Ctx, prop: Prop, t: number) {
     }
     for (let i = 0; i < cars; i++) {
       const angle = turn + (i / cars) * Math.PI * 2;
-      stroke(ctx, [hubAt(side), onWheel(side, angle)], palette.cream, 1.4);
+      const spoke = [hubAt(side), onWheel(side, angle)];
+      if (NORTH_POLE) {
+        // Candy-cane spokes: red stripes over white.
+        stroke(ctx, spoke, palette.snow, 1.8);
+        ctx.setLineDash([3, 3]);
+        stroke(ctx, spoke, palette.red, 1.8);
+        ctx.setLineDash([]);
+      } else {
+        stroke(ctx, spoke, palette.cream, 1.4);
+      }
     }
     ring(side, radius * 0.6, palette.gold, 4);
     ring(side, radius, side > 0 ? palette.blue : palette.blueShade, 4.5);
@@ -1584,7 +1999,7 @@ function ferrisWheel(ctx: Ctx, prop: Prop, t: number) {
 
 // ── Booths ────────────────────────────────────────────────────────────────
 
-const BOOTH_SCHEMES = [
+const CARNIVAL_BOOTH_SCHEMES = [
   {
     wall: palette.gold,
     wallShade: palette.goldShade,
@@ -1610,6 +2025,34 @@ const BOOTH_SCHEMES = [
     awningShade: [palette.redShade, palette.goldShade],
   },
 ] as const;
+/** Under the Christmas skin the booths are wooden toy workbenches with snowy awnings. */
+const WORKBENCH_SCHEMES = [
+  {
+    wall: palette.wood,
+    wallShade: palette.woodDark,
+    awning: [palette.red, palette.snow],
+    awningShade: [palette.redShade, palette.snowShade],
+  },
+  {
+    wall: palette.wood,
+    wallShade: palette.woodDark,
+    awning: [palette.hedgeLight, palette.snow],
+    awningShade: [palette.hedge, palette.snowShade],
+  },
+  {
+    wall: palette.wood,
+    wallShade: palette.woodDark,
+    awning: [palette.gold, palette.snow],
+    awningShade: [palette.goldShade, palette.snowShade],
+  },
+  {
+    wall: palette.wood,
+    wallShade: palette.woodDark,
+    awning: [palette.blue, palette.snow],
+    awningShade: [palette.blueShade, palette.snowShade],
+  },
+] as const;
+const BOOTH_SCHEMES = NORTH_POLE ? WORKBENCH_SCHEMES : CARNIVAL_BOOTH_SCHEMES;
 const CLOSED_SCHEME = {
   wall: palette.closed,
   wallShade: palette.closedShade,
@@ -1698,7 +2141,7 @@ function booth(ctx: Ctx, slot: BoothSlot, name: string, t: number, glow: boolean
     s + 0.12,
     wall,
     3,
-    scheme.wall,
+    NORTH_POLE ? palette.snow : scheme.wall,
     scheme.wallShade,
     scheme.wallShade,
   );
@@ -1718,6 +2161,19 @@ function booth(ctx: Ctx, slot: BoothSlot, name: string, t: number, glow: boolean
         at(x1 + 0.06 + reach, ya, wall - 8),
       ],
       scheme.awningShade[i % 2],
+    );
+  }
+  if (NORTH_POLE) {
+    const sx = x1 + 0.06 + reach * 0.45;
+    poly(
+      ctx,
+      [
+        at(x1 + 0.06, y1 + 0.06, wall),
+        at(x1 + 0.06, y0 - 0.06, wall),
+        at(sx, y0 - 0.06, wall - 3.6),
+        at(sx, y1 + 0.06, wall - 3.6),
+      ],
+      palette.snowShade,
     );
   }
   scallops(
@@ -1741,6 +2197,19 @@ function booth(ctx: Ctx, slot: BoothSlot, name: string, t: number, glow: boolean
         at(xa, y1 + 0.06 + reach, wall - 8),
       ],
       scheme.awning[i % 2],
+    );
+  }
+  if (NORTH_POLE) {
+    const sy = y1 + 0.06 + reach * 0.45;
+    poly(
+      ctx,
+      [
+        at(x0 - 0.06, y1 + 0.06, wall),
+        at(x1 + 0.06, y1 + 0.06, wall),
+        at(x1 + 0.06, sy, wall - 3.6),
+        at(x0 - 0.06, sy, wall - 3.6),
+      ],
+      palette.snow,
     );
   }
   scallops(
@@ -2072,8 +2541,9 @@ export function drawLights(ctx: Ctx, map: MidwayMap, brightness: number, t: numb
 export function drawProp(ctx: Ctx, prop: Prop, t: number) {
   switch (prop.kind) {
     case 'big-top':
-      return bigTop(ctx, prop, t);
+      return NORTH_POLE ? workshopHall(ctx, prop, t) : bigTop(ctx, prop, t);
     case 'round-tent': {
+      if (NORTH_POLE) return gingerbreadHouse(ctx, prop);
       const colors = TENT_COLORS[prop.variant % TENT_COLORS.length];
       return roundTent(
         ctx,
@@ -2092,13 +2562,13 @@ export function drawProp(ctx: Ctx, prop: Prop, t: number) {
     case 'ferris-wheel':
       return ferrisWheel(ctx, prop, t);
     case 'carousel':
-      return carousel(ctx, prop, t);
+      return NORTH_POLE ? christmasTree(ctx, prop, t) : carousel(ctx, prop, t);
     case 'wagon':
-      return wagon(ctx, prop);
+      return NORTH_POLE ? sled(ctx, prop) : wagon(ctx, prop);
     case 'cart':
       return cart(ctx, prop, t);
     case 'ticket-booth':
-      return ticketBooth(ctx, prop);
+      return NORTH_POLE ? postOffice(ctx, prop) : ticketBooth(ctx, prop);
     case 'bench':
       return bench(ctx, prop);
     case 'planter':
