@@ -17,6 +17,7 @@ a {
 }
 
 .awning {
+  position: relative;
   padding: 20px 16px 28px;
   text-align: center;
   background: repeating-linear-gradient(
@@ -60,6 +61,25 @@ a {
   font-size: 28px;
   font-weight: bold;
   text-decoration: none;
+}
+
+.skin-switch {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  padding: 4px 12px;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius);
+  background: var(--color-background);
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.skin-switch:hover,
+.skin-switch:focus-visible {
+  background: var(--color-surface);
 }
 
 main {
@@ -295,6 +315,13 @@ kbd {
   .midway-help,
   .midway-credit {
     display: none;
+  }
+
+  /* No room beside the brand: put the switch on its own line under it. */
+  .skin-switch {
+    position: static;
+    display: block;
+    margin: 8px auto 0;
   }
 }
 

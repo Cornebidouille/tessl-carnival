@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { CarnivalTime } from './carnival';
 import {
-  CLOSED_MESSAGE,
   boothHoursNote,
   canStartGame,
   clockLabel,
+  closedMessage,
   openingState,
 } from './opening-hours';
 
@@ -57,21 +57,40 @@ describe('clockLabel', () => {
 });
 
 describe('boothHoursNote', () => {
-  it('says nothing while the carnival is open', () => {
-    expect(boothHoursNote('open')).toBe('');
-  });
+  it.each(['carnival', 'christmas'] as const)(
+    'says nothing while open, with the %s skin',
+    (skin) => {
+      expect(boothHoursNote('open', skin)).toBe('');
+    },
+  );
 
   it('warns of closing in the last hour', () => {
-    expect(boothHoursNote('closing-soon')).toBe('Closing at 02:00');
+    expect(boothHoursNote('closing-soon', 'carnival')).toBe('Closing at 02:00');
+    expect(boothHoursNote('closing-soon', 'christmas')).toBe('The elves stop at 02:00');
   });
 
   it('says when it opens while closed', () => {
-    expect(boothHoursNote('closed')).toBe('Closed · opens at 06:00');
+    expect(boothHoursNote('closed', 'carnival')).toBe('Closed · opens at 06:00');
+    expect(boothHoursNote('closed', 'christmas')).toBe('Closed · the elves wake at 06:00');
+  });
+
+  it('follows the saved skin, Christmas by default', () => {
+    expect(boothHoursNote('closed')).toBe('Closed · the elves wake at 06:00');
   });
 });
 
-describe('CLOSED_MESSAGE', () => {
-  it('names the opening time', () => {
-    expect(CLOSED_MESSAGE).toBe('The carnival is closed. It opens at 06:00.');
+describe('closedMessage', () => {
+  it('names the opening time with the carnival skin', () => {
+    expect(closedMessage('carnival')).toBe('The carnival is closed. It opens at 06:00.');
+  });
+
+  it('puts the elves to bed with the Christmas skin', () => {
+    expect(closedMessage('christmas')).toBe(
+      'The workshop is closed. The elves are asleep until 06:00.',
+    );
+  });
+
+  it('follows the saved skin, Christmas by default', () => {
+    expect(closedMessage()).toBe(closedMessage('christmas'));
   });
 });
