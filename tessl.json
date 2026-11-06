@@ -331,5 +331,32 @@
         }
       }
     }
+  },
+  "verify": {
+    "groups": {
+      "house-rules": {
+        "path": "verifiers/house-rules/*.json",
+        "level": "error",
+        "include": [
+          "src/games/*/game.ts",
+          "src/games/*/README.md"
+        ],
+        "exclude": [
+          "src/games/**/*.test.ts"
+        ],
+        "verifiers": {
+          "start-cleans-up-after-itself": {
+            "include": [
+              "src/games/*/game.ts"
+            ]
+          },
+          "game-logic-outside-start": {
+            "include": [
+              "src/games/*/game.ts"
+            ]
+          }
+        }
+      }
+    }
   }
 }
