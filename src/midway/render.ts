@@ -1800,14 +1800,15 @@ function snowfall(ctx: Ctx, prop: Prop, t: number) {
   const [x, y] = at(prop.x + 0.5, prop.y + 0.5);
   oval(ctx, x + 1, y + 1, 9, 3.5, palette.snowShade);
   oval(ctx, x, y - 1, 7, 3, palette.snow);
+  const fade = ctx.globalAlpha;
   for (let i = 0; i < 4; i++) {
     const fall = (t * 0.25 + i / 4 + hash(prop.x, prop.y, i)) % 1;
     const fx = x - 8 + i * 5 + Math.sin(t * 1.2 + i * 2) * 2.5;
     const fy = y - 48 + fall * 44;
-    ctx.globalAlpha = Math.min(1, (1 - fall) * 4);
+    ctx.globalAlpha = fade * Math.min(1, (1 - fall) * 4);
     snowflake(ctx, fx, fy, 2 + (i % 2));
   }
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = fade;
 }
 
 function balloons(ctx: Ctx, prop: Prop, t: number) {
@@ -1998,12 +1999,13 @@ export function drawBunting(ctx: Ctx, map: MidwayMap, t: number, view: Box) {
 
 /** A fairy light bulb at each point along a string, twinkling with `t`. */
 function fairyLights(ctx: Ctx, points: readonly Pt[], t: number, phase = 0) {
+  const fade = ctx.globalAlpha;
   points.forEach(([x, y], i) => {
     const color = palette.fairyLights[(i + phase) % palette.fairyLights.length];
-    ctx.globalAlpha = Math.sin(t * 3 + i * 1.7 + phase) > -0.3 ? 1 : 0.45;
+    ctx.globalAlpha = fade * (Math.sin(t * 3 + i * 1.7 + phase) > -0.3 ? 1 : 0.45);
     oval(ctx, x, y + 1.6, 1.3, 1.7, color);
   });
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = fade;
 }
 
 /** Whether a string of bunting between `p` and `q`, sag included, can reach the view. */
