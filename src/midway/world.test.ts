@@ -88,6 +88,53 @@ describe('layoutMidway', () => {
   });
 });
 
+describe('Santa', () => {
+  const ids = Array.from({ length: 7 }, (_, i) => `game-${i}`);
+
+  it('stands beside the arch only under the Christmas skin', () => {
+    const christmas = layoutMidway(ids, 'christmas');
+    const santas = christmas.props.filter((prop) => prop.kind === 'santa');
+    expect(santas).toHaveLength(1);
+    const [santa] = santas;
+    expect(santa.y).toBe(christmas.height - 2);
+    expect(Math.abs(santa.x - (christmas.avenueX + 1))).toBeLessThanOrEqual(3);
+    expect(isBlocked(christmas, santa.x, santa.y)).toBe(true);
+
+    const carnival = layoutMidway(ids, 'carnival');
+    expect(carnival.props.some((prop) => prop.kind === 'santa')).toBe(false);
+    expect(isBlocked(carnival, santa.x, santa.y)).toBe(false);
+  });
+
+  it('leaves the carnival layout as it was, apart from Santa', () => {
+    const christmas = layoutMidway(ids, 'christmas');
+    const carnival = layoutMidway(ids, 'carnival');
+    expect(christmas.props.filter((prop) => prop.kind !== 'santa')).toEqual(carnival.props);
+    expect(christmas.booths).toEqual(carnival.booths);
+    expect(christmas.spawn).toEqual(carnival.spawn);
+  });
+
+  it('still lets the player reach every booth from the gate', () => {
+    for (const count of [0, 1, 7, 15]) {
+      const map = layoutMidway(
+        Array.from({ length: count }, (_, i) => `game-${i}`),
+        'christmas',
+      );
+      expect(canStand(map, map.spawn.x, map.spawn.y)).toBe(true);
+      for (const booth of map.booths) {
+        const path = pathToBooth(map, map.spawn, booth);
+        expect(path, `${count} games, booth ${booth.index}`).toBeDefined();
+        expect(boothInReach(map, path!.at(-1)!)).toBe(booth);
+      }
+    }
+  });
+
+  it('keeps the way out through the arch open', () => {
+    const map = layoutMidway(ids, 'christmas');
+    const out = findPath(map, map.spawn, { x: map.avenueX, y: map.height - 2 });
+    expect(out).toBeDefined();
+  });
+});
+
 describe('isometric projection', () => {
   it('turns tiles into screen pixels and back', () => {
     expect(toScreen(1, 0)).toEqual({ x: 16, y: 8 });

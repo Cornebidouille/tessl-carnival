@@ -58,6 +58,11 @@ function carnivalPalette(colors: Colors) {
     hairs: ['#3b2219', '#1b1035', '#a55728', '#e6c35c', '#6b4429'],
     shirts: [colors.water, '#7bd389', '#b48ee0', colors.danger, '#2b8ccc', colors.stripeB],
     pants: ['#2d3a6b', '#3b2a4f', '#5a4a3a'],
+    /** Elves' tunics and hats, shoes and belts, and Santa's boots and belt. */
+    tunics: [colors.stripeA, '#2e8b57', colors.accent, '#1f6b3a', '#b8283a'],
+    elfHats: ['#2e8b57', colors.stripeA, colors.accent, '#1f6b3a'],
+    elfShoe: '#5a3620',
+    belt: '#1a1414',
     bunting: [colors.stripeA, colors.accent, '#2b8ccc', colors.stripeB],
     balloons: [colors.stripeA, colors.accent, '#2b8ccc', colors.water, '#f59ac0'],
   };
@@ -121,6 +126,11 @@ function christmasPalette(colors: Colors): Palette {
     hairs: ['#3b2219', '#1b1035', '#a55728', '#e6c35c', '#6b4429'],
     shirts: [colors.danger, '#1f7a4a', colors.water, colors.stripeB, '#2b6cb0', colors.accent],
     pants: ['#1e2a4a', '#3b2a4f', '#4a3a2e'],
+    /** Elves' tunics and hats, shoes and belts, and Santa's boots and belt. */
+    tunics: [colors.stripeA, '#1f7a4a', colors.accent, '#145c36', '#9a0c24'],
+    elfHats: ['#1f7a4a', colors.stripeA, colors.accent, '#145c36'],
+    elfShoe: '#5a3620',
+    belt: '#141018',
     bunting: [colors.stripeA, '#1f7a4a', colors.accent, colors.stripeB],
     balloons: [colors.stripeA, '#1f7a4a', colors.accent, colors.water, colors.stripeB],
   };

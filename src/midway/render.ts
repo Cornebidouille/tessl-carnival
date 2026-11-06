@@ -1,4 +1,4 @@
-import { canvasFont, theme } from '../carnival';
+import { canvasFont, currentSkin, theme } from '../carnival';
 import bannerUrl from './aidevcon-banner.png';
 import { palette, type DayLook } from './palette';
 import {
@@ -803,6 +803,33 @@ function person(
     ctx.ellipse(x, y, 8, 3.5, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
+  if (ELVES) elf(ctx, x, y, look, swing, dir, options.back ?? false);
+  else human(ctx, x, y, look, swing, dir, options.back ?? false);
+  if (options.player) {
+    // Under the Christmas skin the marker rides above the elf's hat.
+    const hop = Math.sin((options.t ?? 0) * 5) * 1.5 - (ELVES ? 6 : 0);
+    poly(
+      ctx,
+      [
+        [x - 4, y - 34 + hop],
+        [x + 4, y - 34 + hop],
+        [x, y - 29 + hop],
+      ],
+      palette.gold,
+    );
+  }
+}
+
+/** Today's carnival visitor: shirt, trousers, hair and an optional cap. */
+function human(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  look: Look,
+  swing: number,
+  dir: number,
+  back: boolean,
+) {
   stroke(
     ctx,
     [
@@ -846,10 +873,10 @@ function person(
   oval(ctx, x, y - 20.5, 4, 4, look.skin);
   ctx.fillStyle = look.hair;
   ctx.beginPath();
-  if (options.back) ctx.arc(x, y - 20.8, 4.2, 0, Math.PI * 2);
+  if (back) ctx.arc(x, y - 20.8, 4.2, 0, Math.PI * 2);
   else ctx.arc(x, y - 21, 4.2, Math.PI * 1.05, Math.PI * 1.95);
   ctx.fill();
-  if (!options.back) {
+  if (!back) {
     oval(ctx, x - 1.5 + dir, y - 20.3, 0.6, 0.7, palette.ink);
     oval(ctx, x + 1.5 + dir, y - 20.3, 0.6, 0.7, palette.ink);
   }
@@ -858,7 +885,7 @@ function person(
     ctx.beginPath();
     ctx.arc(x, y - 22, 4.4, Math.PI, Math.PI * 2);
     ctx.fill();
-    if (!options.back)
+    if (!back)
       poly(
         ctx,
         [
@@ -870,18 +897,223 @@ function person(
         look.cap,
       );
   }
-  if (options.player) {
-    const hop = Math.sin((options.t ?? 0) * 5) * 1.5;
+}
+
+/** Under the Christmas skin, everyone on the midway is one of Santa's elves. */
+const ELVES = currentSkin() === 'christmas';
+
+/** A leg in a red-and-white striped stocking, ending in a small curled shoe. */
+function stocking(ctx: Ctx, hip: Pt, foot: Pt, dir: number) {
+  stroke(ctx, [hip, foot], palette.red, 2.6);
+  for (const f of [0.2, 0.55]) {
+    const a: Pt = [lerp(hip[0], foot[0], f), lerp(hip[1], foot[1], f)];
+    const b: Pt = [lerp(hip[0], foot[0], f + 0.16), lerp(hip[1], foot[1], f + 0.16)];
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = palette.white;
+    ctx.beginPath();
+    ctx.moveTo(a[0], a[1]);
+    ctx.lineTo(b[0], b[1]);
+    ctx.stroke();
+  }
+  const [fx, fy] = foot;
+  poly(
+    ctx,
+    [
+      [fx - dir * 1.4, fy - 1.2],
+      [fx + dir * 2.4, fy - 1],
+      [fx + dir * 3.6, fy - 2.6],
+      [fx + dir * 3, fy + 0.4],
+      [fx - dir * 1.4, fy + 0.6],
+    ],
+    palette.elfShoe,
+  );
+}
+
+/** One of Santa's elves, the same size and walk as a visitor. */
+function elf(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  look: Look,
+  swing: number,
+  dir: number,
+  back: boolean,
+) {
+  stocking(ctx, [x - 1.6, y - 8], [x - 1.6 + swing * 1.6, y - 1], dir);
+  stocking(ctx, [x + 1.6, y - 8], [x + 1.6 - swing * 1.6, y - 1], dir);
+  // Sleeves in the tunic's colour, with a hand at the end.
+  for (const side of [-1, 1]) {
+    const hand: Pt = [x + side * (5 + swing), y - 9];
+    stroke(ctx, [[x + side * 4, y - 15], hand], look.tunic, 2.2);
+    oval(ctx, hand[0], hand[1], 1.1, 1.1, look.skin);
+  }
+  poly(
+    ctx,
+    [
+      [x - 3.6, y - 16.5],
+      [x + 3.6, y - 16.5],
+      [x + 5, y - 7],
+      [x - 5, y - 7],
+    ],
+    look.tunic,
+  );
+  poly(
+    ctx,
+    [
+      [x - 4.4, y - 12],
+      [x + 4.4, y - 12],
+      [x + 4.6, y - 10.6],
+      [x - 4.6, y - 10.6],
+    ],
+    palette.belt,
+  );
+  if (!back) oval(ctx, x, y - 11.3, 1, 0.8, palette.gold);
+  // Pointed ears either side of the head.
+  for (const side of [-1, 1]) {
     poly(
       ctx,
       [
-        [x - 4, y - 34 + hop],
-        [x + 4, y - 34 + hop],
-        [x, y - 29 + hop],
+        [x + side * 3, y - 22],
+        [x + side * 7, y - 23.5],
+        [x + side * 3.4, y - 19],
       ],
-      palette.gold,
+      look.skin,
     );
   }
+  oval(ctx, x, y - 20.5, 4, 4, look.skin);
+  if (back) {
+    ctx.fillStyle = look.hair;
+    ctx.beginPath();
+    ctx.arc(x, y - 20.8, 4.1, Math.PI * 0.1, Math.PI * 0.9, true);
+    ctx.fill();
+  } else {
+    oval(ctx, x - 1.5 + dir, y - 20.3, 0.6, 0.7, palette.ink);
+    oval(ctx, x + 1.5 + dir, y - 20.3, 0.6, 0.7, palette.ink);
+  }
+  // A tall pointy hat that flops over behind them, with a white bobble and brim.
+  poly(
+    ctx,
+    [
+      [x - 4.2, y - 23],
+      [x + 4.2, y - 23],
+      [x + 0.5 - dir * 0.5, y - 31],
+      [x - dir * 5, y - 30.5],
+      [x - dir * 1.5, y - 29],
+    ],
+    look.hat,
+  );
+  oval(ctx, x - dir * 5, y - 30.5, 1.5, 1.5, palette.white);
+  oval(ctx, x, y - 23, 4.6, 1.5, palette.white);
+}
+
+/**
+ * Santa, by the gate: bigger than an elf, in a red suit with white trim, a black
+ * belt and a white beard, slowly waving one arm.
+ */
+function santa(ctx: Ctx, prop: Prop, t: number) {
+  const [x, y] = at(prop.x + 0.5, prop.y + 0.5);
+  oval(ctx, x, y, 8, 3, palette.shadow);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1.5, 1.5);
+  // Black boots under the red trousers.
+  for (const side of [-1, 1]) {
+    stroke(
+      ctx,
+      [
+        [side * 2, -8],
+        [side * 2, -2],
+      ],
+      palette.red,
+      3,
+    );
+    oval(ctx, side * 2.4, -1, 2.2, 1.2, palette.belt);
+  }
+  // The suit: a round red coat with a white hem and a white stripe down the front.
+  ctx.fillStyle = palette.red;
+  ctx.beginPath();
+  ctx.roundRect(-5.5, -17.5, 11, 11.5, 4);
+  ctx.fill();
+  poly(
+    ctx,
+    [
+      [-5.5, -7.5],
+      [5.5, -7.5],
+      [5.5, -6],
+      [-5.5, -6],
+    ],
+    palette.white,
+  );
+  poly(
+    ctx,
+    [
+      [-0.7, -17],
+      [0.7, -17],
+      [0.7, -7.5],
+      [-0.7, -7.5],
+    ],
+    palette.white,
+  );
+  poly(
+    ctx,
+    [
+      [-5.6, -12.5],
+      [5.6, -12.5],
+      [5.6, -10.8],
+      [-5.6, -10.8],
+    ],
+    palette.belt,
+  );
+  poly(
+    ctx,
+    [
+      [-1.2, -12.7],
+      [1.2, -12.7],
+      [1.2, -10.6],
+      [-1.2, -10.6],
+    ],
+    palette.gold,
+  );
+  // One arm rests at his side; the other waves slowly overhead.
+  stroke(
+    ctx,
+    [
+      [-5, -16],
+      [-6.2, -10],
+    ],
+    palette.red,
+    2.6,
+  );
+  oval(ctx, -6.2, -9.6, 1.3, 1.3, palette.white);
+  const wave = Math.sin(t * 2) * 0.45;
+  const hand: Pt = [5 + Math.cos(-1.1 + wave) * 7, -16 + Math.sin(-1.1 + wave) * 7];
+  stroke(ctx, [[5, -16], hand], palette.red, 2.6);
+  oval(ctx, hand[0], hand[1], 1.4, 1.4, palette.white);
+  // His face, and a white beard over the chin and down onto the coat.
+  oval(ctx, 0, -21, 4, 4, palette.skins[0]);
+  oval(ctx, -1.4, -21.6, 0.6, 0.7, palette.ink);
+  oval(ctx, 1.4, -21.6, 0.6, 0.7, palette.ink);
+  ctx.fillStyle = palette.white;
+  ctx.beginPath();
+  ctx.moveTo(-4.4, -21);
+  ctx.quadraticCurveTo(-4, -14.5, 0, -13.5);
+  ctx.quadraticCurveTo(4, -14.5, 4.4, -21);
+  ctx.quadraticCurveTo(0, -18.5, -4.4, -21);
+  ctx.fill();
+  // A red hat that droops to one side, with a white brim and bobble.
+  poly(
+    ctx,
+    [
+      [-4.2, -23.5],
+      [4.2, -23.5],
+      [1, -30],
+      [5.5, -28],
+    ],
+    palette.red,
+  );
+  oval(ctx, 5.5, -28, 1.6, 1.6, palette.white);
+  oval(ctx, 0, -23.5, 4.8, 1.6, palette.white);
+  ctx.restore();
 }
 
 function cart(ctx: Ctx, prop: Prop, t: number) {
@@ -1583,6 +1815,7 @@ const PROP_HEIGHTS: Record<Prop['kind'], number> = {
   balloons: 52,
   'bunting-pole': 0,
   billboard: BILLBOARD_HEIGHT + 40,
+  santa: 52,
 };
 
 /** Roughly the screen box a prop is drawn in. */
@@ -1607,6 +1840,9 @@ export interface Look {
   shirt: string;
   pants: string;
   cap?: string;
+  /** What an elf wears, under the Christmas skin. */
+  tunic: string;
+  hat: string;
 }
 
 export function visitorLook(n: number): Look {
@@ -1615,6 +1851,8 @@ export function visitorLook(n: number): Look {
     hair: palette.hairs[(n * 3 + 1) % palette.hairs.length],
     shirt: palette.shirts[(n * 2 + 1) % palette.shirts.length],
     pants: palette.pants[n % palette.pants.length],
+    tunic: palette.tunics[(n * 2 + 1) % palette.tunics.length],
+    hat: palette.elfHats[(n * 3 + 2) % palette.elfHats.length],
   };
 }
 
@@ -1624,6 +1862,8 @@ export const PLAYER_LOOK: Look = {
   shirt: palette.red,
   pants: palette.pants[0],
   cap: palette.gold,
+  tunic: palette.tunics[1],
+  hat: palette.red,
 };
 
 export function drawWalker(ctx: Ctx, walker: Walker, look: Look, player = false, t = 0) {
@@ -1869,6 +2109,8 @@ export function drawProp(ctx: Ctx, prop: Prop, t: number) {
       return buntingPole(ctx, prop);
     case 'billboard':
       return billboard(ctx, prop, t);
+    case 'santa':
+      return santa(ctx, prop, t);
   }
 }
 
