@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { CarnivalTime } from '../carnival';
+import { skins, type CarnivalTime } from '../carnival';
 import { blendLooks, dayLookAt, mixColor } from './daylight';
-import { dayLooks, palette } from './palette';
+import { dayLooks, dayLooksFor, palette, paletteFor } from './palette';
 
 function at(label: string): CarnivalTime {
   const [hours, minutes] = label.split(':').map(Number);
@@ -104,5 +104,54 @@ describe('dayLookAt', () => {
     expect(dayLookAt(at('00:30')).lights).toBe(1);
     expect(dayLookAt(at('01:30')).lights).toBeCloseTo(0.5);
     expect(dayLookAt(at('02:00')).lights).toBe(0);
+  });
+});
+
+describe('skins', () => {
+  it('gives both skins the same palette and day-look keys', () => {
+    expect(Object.keys(paletteFor('christmas')).sort()).toEqual(
+      Object.keys(paletteFor('carnival')).sort(),
+    );
+    const carnival = dayLooksFor('carnival');
+    const christmas = dayLooksFor('christmas');
+    expect(Object.keys(christmas).sort()).toEqual(Object.keys(carnival).sort());
+    for (const part of Object.keys(carnival) as (keyof typeof carnival)[]) {
+      expect(Object.keys(christmas[part]).sort()).toEqual(Object.keys(carnival[part]).sort());
+    }
+  });
+
+  it('keeps the carnival skin looking as it always did', () => {
+    const carnival = paletteFor('carnival');
+    expect(carnival.grass).toBe('#a5c43a');
+    expect(carnival.path).toBe('#f3e28e');
+    expect(carnival.hedge).toBe('#6f9a2c');
+    expect(carnival.sky).toBe('#38b4e6');
+    expect(carnival.red).toBe(skins.carnival.colors.stripeA);
+    expect(dayLooksFor('carnival').night.skyMiddle).toBe('#0e1442');
+    expect(dayLooksFor('carnival').night.skyHorizon).toBe('#24306e');
+  });
+
+  it('covers the Christmas ground in snow, with icy paths and pine hedges', () => {
+    const christmas = paletteFor('christmas');
+    expect(brightness(christmas.grass)).toBeGreaterThan(230);
+    expect(brightness(christmas.path)).toBeGreaterThan(brightness(christmas.hedge));
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(christmas.path.slice(i, i + 2), 16));
+    expect(b).toBeGreaterThan(r);
+    expect(b).toBeGreaterThanOrEqual(g);
+    const [hr, hg, hb] = [1, 3, 5].map((i) => parseInt(christmas.hedge.slice(i, i + 2), 16));
+    expect(hg).toBeGreaterThan(hr);
+    expect(hg).toBeGreaterThan(hb);
+    expect(brightness(christmas.hedge)).toBeLessThan(brightness(paletteFor('carnival').hedge));
+  });
+
+  it('tints the Christmas night sky with an aurora', () => {
+    const carnival = dayLooksFor('carnival');
+    const christmas = dayLooksFor('christmas');
+    for (const part of ['night', 'closed'] as const) {
+      expect(christmas[part].skyTop).toBe(carnival[part].skyTop);
+      expect(christmas[part].skyMiddle).not.toBe(carnival[part].skyMiddle);
+      expect(christmas[part].skyHorizon).not.toBe(carnival[part].skyHorizon);
+      expect(brightness(christmas[part].skyTop)).toBeLessThan(30);
+    }
   });
 });
