@@ -70,6 +70,8 @@ function carnivalPalette(colors: Colors) {
     gingerbreadShade: '#8f5428',
     bunting: [colors.stripeA, colors.accent, '#2b8ccc', colors.stripeB],
     balloons: [colors.stripeA, colors.accent, '#2b8ccc', colors.water, '#f59ac0'],
+    /** The bulbs on the North Pole's strings of fairy lights. */
+    fairyLights: [colors.stripeA, '#2e8b57', colors.accent, '#2b8ccc'],
   };
 }
 
@@ -143,6 +145,8 @@ function christmasPalette(colors: Colors): Palette {
     gingerbreadShade: '#8f5428',
     bunting: [colors.stripeA, '#1f7a4a', colors.accent, colors.stripeB],
     balloons: [colors.stripeA, '#1f7a4a', colors.accent, colors.water, colors.stripeB],
+    /** The bulbs on the North Pole's strings of fairy lights. */
+    fairyLights: [colors.stripeA, '#1f7a4a', colors.accent, '#2b6cb0'],
   };
 }
 
