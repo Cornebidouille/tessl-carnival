@@ -5,10 +5,12 @@ import {
   createState,
   fire,
   isHit,
+  labelsFor,
   placeText,
   press,
   scoreForHit,
   step,
+  toyFor,
   type Target,
 } from './game';
 
@@ -112,5 +114,43 @@ describe('water cannon', () => {
     expect(placeText(12)).toBe('12th best score');
     expect(placeText(21)).toBe('21st best score');
     expect(placeText(23)).toBe('23rd best score');
+  });
+});
+
+describe('labelsFor', () => {
+  it('names the game Snowball Cannon on the Christmas skin', () => {
+    const labels = labelsFor('christmas');
+    expect(labels.name).toBe('Snowball Cannon');
+    expect(labels.description).toBe(
+      'Knock the toys off the test rails before your snowballs run out. Faster toys score more.',
+    );
+    expect(labels.ammo).toBe('Snowballs');
+    expect(labels.gameOver(140)).toBe('Out of snowballs! You scored 140');
+  });
+
+  it('keeps Water Cannon on the carnival skin', () => {
+    const labels = labelsFor('carnival');
+    expect(labels.name).toBe('Water Cannon');
+    expect(labels.description).toBe(
+      'Soak the targets before your tank runs dry. Faster targets score more.',
+    );
+    expect(labels.ammo).toBe('Water');
+    expect(labels.gameOver(140)).toBe('Tank empty! You scored 140');
+  });
+});
+
+describe('toyFor', () => {
+  it('gives each rail its own kind of toy, top to bottom', () => {
+    const state = createState();
+    const railYs = [...new Set(state.targets.map((t) => t.y))];
+    expect(railYs.map((y) => toyFor({ y }))).toEqual(['present', 'soldier', 'bear']);
+  });
+
+  it('gives every target on a rail the same toy', () => {
+    const state = createState();
+    for (const t of state.targets) {
+      const sameRail = state.targets.filter((other) => other.y === t.y);
+      expect(new Set(sameRail.map(toyFor)).size).toBe(1);
+    }
   });
 });
