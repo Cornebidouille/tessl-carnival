@@ -316,6 +316,13 @@ kbd {
   .midway-credit {
     display: none;
   }
+
+  /* No room beside the brand: put the switch on its own line under it. */
+  .skin-switch {
+    position: static;
+    display: block;
+    margin: 8px auto 0;
+  }
 }
 
 .game-header {
