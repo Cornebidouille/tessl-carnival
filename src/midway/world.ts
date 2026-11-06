@@ -6,6 +6,8 @@
  * screen, +x runs down-right and +y runs down-left.
  */
 
+import { currentSkin, type SkinId } from '../carnival';
+
 export const TILE_W = 32;
 export const TILE_H = 16;
 
@@ -48,7 +50,8 @@ export type PropKind =
   | 'planter'
   | 'balloons'
   | 'bunting-pole'
-  | 'billboard';
+  | 'billboard'
+  | 'santa';
 
 export interface Prop extends Rect {
   kind: PropKind;
@@ -96,9 +99,10 @@ export function seededRandom(seed: number): () => number {
  * Lays out the midway for a list of games. Booths line both sides of the
  * avenue, two per row starting by the gate, and the avenue grows as games are
  * added. Slots without a game become "coming soon" booths. Tents, rides and
- * carts fill the space around them.
+ * carts fill the space around them. Under the Christmas skin, Santa stands
+ * beside the arch.
  */
-export function layoutMidway(gameIds: readonly string[]): MidwayMap {
+export function layoutMidway(gameIds: readonly string[], skin: SkinId = currentSkin()): MidwayMap {
   const rows = Math.max(MIN_ROWS, Math.ceil(gameIds.length / 2));
   const avenueEnd = FIRST_ROW_Y + rows * ROW_SPACING;
   const entrance = avenueEnd + 2;
@@ -212,6 +216,9 @@ export function layoutMidway(gameIds: readonly string[]): MidwayMap {
   add('balloons', 22, entrance + 4);
   add('planter', 15, entrance);
   add('planter', 1, height - 2);
+  // Santa greets visitors just inside the gate, right of the arch, on a corner
+  // of the plaza no walk needs.
+  if (skin === 'christmas') add('santa', AVENUE_X + 3, height - 2);
 
   return {
     width,
