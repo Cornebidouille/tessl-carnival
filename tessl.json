@@ -20,7 +20,8 @@
       "tags": [
         "Ticket to PR"
       ],
-      "description": "Ship a labelled GitHub issue as one pull request"
+      "description": "Ship a labelled GitHub issue as one pull request",
+      "instructions": "Once the pull request is open and ready for review (not a draft), turn on auto-merge for it with `gh pr merge <number> --auto --squash`. Never merge it yourself. GitHub queues and merges it only when the main ruleset is met: an approval after the last push, the `check` status passing, and every review thread resolved."
     },
     "shepherd": {
       "skill": "tessl-labs/factory#shepherd",
@@ -30,7 +31,8 @@
       "tags": [
         "Ticket to PR"
       ],
-      "description": "Answer reviews and fix checks on Tessl's pull requests"
+      "description": "Answer reviews and fix checks on Tessl's pull requests",
+      "instructions": "When you finish a round and auto-merge is off on a pull request that is not a draft, first find who last turned it off, with one query that returns only the latest such event, so no pagination applies: `gh api graphql -f query='{repository(owner:\"<owner>\",name:\"<repo>\"){pullRequest(number:<number>){timelineItems(last:1,itemTypes:[AUTO_MERGE_DISABLED_EVENT]){nodes{... on AutoMergeDisabledEvent{actor{__typename login}}}}}}}'`. If that actor's `__typename` is `User`, a maintainer is holding the pull request: leave auto-merge off and say so in your summary. If the query fails, also leave it off. Only when the query succeeds and the actor is a `Bot`, or there is no such event, turn it back on with `gh pr merge <number> --auto --squash`. Never merge it yourself."
     },
     "follow-ticket-changes": {
       "skill": "tessl-labs/factory#follow-ticket-changes",
@@ -254,7 +256,13 @@
             "equals": "tessl"
           }
         },
-        "event.sender.id": 14827655
+        "event.sender.id": {
+          "in": [
+            14827655,
+            295179765,
+            118344674
+          ]
+        }
       },
       "concurrency": {
         "keys": [
@@ -313,7 +321,13 @@
         "event.pull_request.head.ref": {
           "matches": "^tessl/"
         },
-        "event.sender.id": 14827655,
+        "event.sender.id": {
+          "in": [
+            14827655,
+            295179765,
+            118344674
+          ]
+        },
         "event.pull_request.head.repo.id": 1429704247
       },
       "concurrency": {
