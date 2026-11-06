@@ -175,8 +175,9 @@ To do it by hand instead:
 7. **Tidy branches.** Go to **Settings → General → Pull Requests**, and check
    **Automatically delete head branches**, so merged branches don't pile up.
 
-This repo doesn't include a `tessl.json`. To set up a factory, run `tessl init`
-in your clone first, the same as you would in any repository of your own.
+This repo already has a `tessl.json` at its root, with the factory's
+dependencies, agents, actions and triggers. Don't run `tessl init` over it: run
+`tessl install` in your clone to fetch the plugins it lists.
 
 ## Work with the factory
 
