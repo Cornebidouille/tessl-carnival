@@ -867,9 +867,10 @@ function workshopHall(ctx: Ctx, prop: Prop, t: number) {
   );
   const [sx, sy] = at(cx + 0.2, ym + 0.27, wall + roof + 14);
   ctx.save();
+  const fade = ctx.globalAlpha;
   for (let i = 0; i < 3; i++) {
     const rise = (t * 0.4 + i / 3) % 1;
-    ctx.globalAlpha = 1 - rise;
+    ctx.globalAlpha = fade * (1 - rise);
     oval(ctx, sx + rise * 8, sy - rise * 24, 2 + rise * 4, 2 + rise * 4, palette.cloudShade);
   }
   ctx.restore();
