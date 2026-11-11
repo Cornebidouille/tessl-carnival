@@ -1,6 +1,6 @@
 # Tessl Carnival
 
-[![AI DevCon NYC, 2 to 4 November 2026](https://img.shields.io/badge/AI%20DevCon%20NYC-2--4%20Nov%202026-e63946)](https://tessl.io/devcon?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
+[![AI DevCon London, 7 to 8 June 2027](https://img.shields.io/badge/AI%20DevCon%20London-7--8%20Jun%202027-e63946)](https://luma.com/aidevcon-ldn2027?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
 [![Play the carnival](https://img.shields.io/badge/Play-the%20carnival-ffcc33)](https://tesslio.github.io/tessl-carnival/)
 [![Built with Tessl](https://img.shields.io/badge/Built%20with-Tessl-1b1035)](https://tessl.io/?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
 [![Join the Tessl Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/jbb2vHnHZQ?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
@@ -24,8 +24,8 @@ code review checks the result before you merge.
 
 Tessl Carnival is the starter repo for **Build your own software factory with
 context**, a 90-minute hands-on workshop at
-**[AI Native DevCon NYC](https://tessl.io/devcon?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)**, November 2 to 4, 2026 at Industry City,
-Brooklyn. Everyone in the room builds on this same repo, so you can compare
+**[AI DevCon London](https://luma.com/aidevcon-ldn2027?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)**, June 7 to 8, 2027 at The Brewery,
+London. Everyone in the room builds on this same repo, so you can compare
 notes with the person next to you.
 
 The room comes together three times: a 10-minute kick-off, a checkpoint and
@@ -70,7 +70,7 @@ building it during DevCon, and come and find us at the Tessl booth to go
 further.
 
 **Not in the room?** AI DevCon is where developers and teams building software
-factories compare notes. Get a [free virtual ticket](https://luma.com/aidevcon-nyc2026?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival), or watch the
+factories compare notes. Get a [free virtual ticket](https://luma.com/aidevcon-ldn2027?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival), or watch the
 [talks from AI DevCon London](https://www.youtube.com/watch?v=KpfnldJO3Iw&list=PLISstAySqk7KtlYPFps1ZnK9xNIMSVkDD), with speakers from Anthropic, Google
 DeepMind, Meta, Netlify, Thoughtworks and Docker.
 
