@@ -1862,7 +1862,7 @@ function balloons(ctx: Ctx, prop: Prop, t: number, snow: number) {
 const BILLBOARD_HEIGHT = 40;
 
 /**
- * The billboard's sign, in plane-local pixels: the banner plus its gold frame.
+ * The billboard's sign, in plane-local pixels: the banner plus its AI DevCon purple frame.
  * The board keeps the banner image's shape, 4 by 1.
  */
 const BILLBOARD_SIGN = { width: 144, height: 36, frame: 3 };
@@ -1928,7 +1928,7 @@ function billboard(ctx: Ctx, prop: Prop, t: number) {
   }
   onPlane(ctx, centre, () => {
     const { width, height, frame } = BILLBOARD_SIGN;
-    ctx.fillStyle = palette.gold;
+    ctx.fillStyle = palette.devcon;
     ctx.beginPath();
     ctx.roundRect(
       -width / 2 - frame,
@@ -1952,7 +1952,7 @@ function billboard(ctx: Ctx, prop: Prop, t: number) {
       ctx.restore();
     }
     for (let i = 0; i < 12; i++) {
-      ctx.fillStyle = Math.sin(t * 4 - i * 0.7) > 0 ? palette.cream : palette.goldShade;
+      ctx.fillStyle = Math.sin(t * 4 - i * 0.7) > 0 ? palette.cream : palette.devconShade;
       ctx.beginPath();
       ctx.arc(-width / 2 + 4 + i * ((width - 8) / 11), -height / 2 - 1.5, 1.2, 0, Math.PI * 2);
       ctx.fill();
