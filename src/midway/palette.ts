@@ -53,6 +53,9 @@ function carnivalPalette(colors: Colors) {
     glowEdge: 'rgba(255, 210, 122, 0)',
     bulb: colors.accent,
     star: colors.text,
+    /** The AI DevCon purple: the event's own colour, the same under every skin. */
+    devcon: '#c084fc',
+    devconShade: '#9b5fd6',
 
     skins: ['#f1c27d', '#c68642', '#8d5524', '#e0ac69', '#ffdbac'],
     hairs: ['#3b2219', '#1b1035', '#a55728', '#e6c35c', '#6b4429'],
@@ -133,6 +136,9 @@ function christmasPalette(colors: Colors): Palette {
     glowEdge: 'rgba(255, 210, 122, 0)',
     bulb: colors.accent,
     star: colors.text,
+    /** The AI DevCon purple: the event's own colour, the same under every skin. */
+    devcon: '#c084fc',
+    devconShade: '#9b5fd6',
 
     skins: ['#f1c27d', '#c68642', '#8d5524', '#e0ac69', '#ffdbac'],
     hairs: ['#3b2219', '#1b1035', '#a55728', '#e6c35c', '#6b4429'],

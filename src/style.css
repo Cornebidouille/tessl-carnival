@@ -1,4 +1,12 @@
-/* Colours and fonts come from src/carnival/theme.ts via applyTheme(). */
+/*
+ * Colours and fonts come from src/carnival/theme.ts via applyTheme(). The one
+ * exception is --devcon-purple, AI DevCon's own colour, which stays the same
+ * under every skin.
+ */
+
+:root {
+  --devcon-purple: #c084fc;
+}
 
 * {
   box-sizing: border-box;
@@ -143,6 +151,7 @@ body[data-view='midway'] main {
   top: 16px;
   left: 16px;
   padding: 6px 12px;
+  border-color: var(--devcon-purple);
   color: var(--color-muted);
   font-size: 13px;
 }
@@ -156,6 +165,10 @@ body[data-view='midway'] main {
 .midway-credit a:hover,
 .midway-credit a:focus-visible {
   text-decoration: underline;
+}
+
+.midway-credit a.devcon {
+  color: var(--devcon-purple);
 }
 
 .midway-clock {

@@ -1,6 +1,6 @@
 # Tessl Carnival
 
-[![AI DevCon London, 7 to 8 June 2027](https://img.shields.io/badge/AI%20DevCon%20London-7--8%20Jun%202027-e63946)](https://luma.com/aidevcon-ldn2027?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
+[![AI DevCon London, 7 to 8 June 2027](https://img.shields.io/badge/AI%20DevCon%20London-7--8%20Jun%202027-c084fc)](https://luma.com/aidevcon-ldn2027?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
 [![Play the carnival](https://img.shields.io/badge/Play-the%20carnival-ffcc33)](https://tesslio.github.io/tessl-carnival/)
 [![Built with Tessl](https://img.shields.io/badge/Built%20with-Tessl-1b1035)](https://tessl.io/?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
 [![Join the Tessl Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/jbb2vHnHZQ?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival)
