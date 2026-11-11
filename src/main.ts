@@ -67,7 +67,7 @@ function renderMidway(notice?: string) {
         Built with
         <a href="https://tessl.io/?utm_source=carnival&amp;utm_medium=midway-credit&amp;utm_campaign=tessl-carnival" target="_blank" rel="noopener">Tessl</a>
         at
-        <a href="https://tessl.io/devcon?utm_source=carnival&amp;utm_medium=midway-credit&amp;utm_campaign=tessl-carnival" target="_blank" rel="noopener">AI DevCon NYC</a>
+        <a href="https://luma.com/aidevcon-ldn2027?utm_source=carnival&amp;utm_medium=midway-credit&amp;utm_campaign=tessl-carnival" target="_blank" rel="noopener">AI DevCon London</a>
         <span class="midway-links">
           <a href="${REPO_URL}" target="_blank" rel="noopener">Build your own</a>
           <span class="midway-share" hidden>
