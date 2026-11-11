@@ -274,7 +274,7 @@ use, including Claude Code, Cursor and Codex.
   [blog](https://tessl.io/blog?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival) and
   [podcast](https://tessl.io/podcast?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival).
 - **Talk to us:** [Discord](https://discord.com/invite/jbb2vHnHZQ?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival), or come to the next
-  [AI DevCon](https://tessl.io/devcon?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival).
+  [AI DevCon](https://luma.com/aidevcon-ldn2027?utm_source=github&utm_medium=readme&utm_campaign=tessl-carnival).
 - **Follow along:** [LinkedIn](https://linkedin.com/company/tesslio/) and
   [YouTube](https://www.youtube.com/@tessl-ai).
 

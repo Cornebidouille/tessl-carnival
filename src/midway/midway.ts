@@ -84,7 +84,7 @@ const MOVE_KEYS: Record<string, [number, number]> = {
 };
 const PLAY_KEYS = new Set(['KeyE', 'Enter', 'Space']);
 const DEVCON_URL =
-  'https://tessl.io/devcon?utm_source=carnival&utm_medium=midway-billboard&utm_campaign=tessl-carnival';
+  'https://luma.com/aidevcon-ldn2027?utm_source=carnival&utm_medium=midway-billboard&utm_campaign=tessl-carnival';
 const MIN_QUALITY = 0.5;
 
 /** Where the player stood when they last left the midway, for this page load. */
