@@ -17,17 +17,28 @@ limit="${TESSL_INSTALL_TIMEOUT:-45}" # keep under the hook's 60 s timeout
 
 if command -v perl >/dev/null 2>&1; then
   # On timeout send SIGTERM: the npm and Homebrew launchers forward only
-  # INT, TERM and HUP to the real binary.
-  perl -e '
+  # INT, TERM and HUP to the real binary. Give it 5 s, then SIGKILL.
+  # An install killed by a signal counts as a failure.
+  perl -MPOSIX=WNOHANG -e '
     my $t = shift;
     my $pid = fork;
     defined $pid or exit 1;
     if (!$pid) { exec @ARGV; exit 127 }
-    $SIG{ALRM} = sub { kill "TERM", $pid; waitpid $pid, 0; exit 124 };
+    $SIG{ALRM} = sub {
+      kill "TERM", $pid;
+      for (1 .. 10) {
+        exit 124 if waitpid($pid, WNOHANG) == $pid;
+        select(undef, undef, undef, 0.5);
+      }
+      kill "KILL", $pid;
+      exit 124;
+    };
     alarm $t;
     waitpid $pid, 0;
-    exit($? >> 8);
+    exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
   ' "$limit" tessl install --yes >/dev/null 2>&1
+elif command -v timeout >/dev/null 2>&1; then
+  timeout -k 5 "$limit" tessl install --yes >/dev/null 2>&1
 else
   tessl install --yes >/dev/null 2>&1
 fi && exit 0
