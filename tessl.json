@@ -2,8 +2,8 @@
   "name": "ws-01a1639215b37585bbb0f7c3b960423f/tessl-carnival",
   "mode": "managed",
   "dependencies": {
-    "tessl-labs/factory-setup": {
-      "version": "0.24.1"
+    "tessl/factory-setup": {
+      "version": "latest"
     }
   },
   "agents": [

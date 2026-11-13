@@ -153,7 +153,7 @@ two apps in your browser:
 
    ```bash
    tessl init
-   tessl install tessl-labs/factory-setup
+   tessl install tessl/factory-setup
    ```
 
    `tessl init` is the same first step you'd take in any repository of your own.
@@ -435,7 +435,7 @@ carnival.
 
 ```bash
 tessl init
-tessl install tessl-labs/factory-setup
+tessl install tessl/factory-setup
 ```
 
 Restart your coding agent, then type **Help me set up a factory**. Start with
