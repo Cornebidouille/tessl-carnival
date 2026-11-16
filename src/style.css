@@ -1,7 +1,7 @@
 /*
  * Colours and fonts come from src/carnival/theme.ts via applyTheme(). The one
  * exception is --devcon-purple, AI DevCon's own colour, which stays the same
- * under every skin.
+ * under every skin and borders the midway's panels and the skin switch.
  */
 
 :root {
@@ -76,7 +76,7 @@ a {
   top: 12px;
   right: 16px;
   padding: 4px 12px;
-  border: 2px solid var(--color-accent);
+  border: 2px solid var(--devcon-purple);
   border-radius: var(--radius);
   background: var(--color-background);
   color: var(--color-accent);
@@ -132,7 +132,7 @@ body[data-view='midway'] main {
 .booth-card {
   position: absolute;
   margin: 0;
-  border: 2px solid var(--color-accent);
+  border: 2px solid var(--devcon-purple);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--color-background) 88%, transparent);
 }
@@ -151,7 +151,6 @@ body[data-view='midway'] main {
   top: 16px;
   left: 16px;
   padding: 6px 12px;
-  border-color: var(--devcon-purple);
   color: var(--color-muted);
   font-size: 13px;
 }
@@ -253,7 +252,7 @@ kbd {
   width: min(360px, calc(100% - 32px));
   padding: 16px 20px;
   transform: translateX(-50%);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--devcon-purple) 25%, transparent);
 }
 
 .booth-card[hidden] {
