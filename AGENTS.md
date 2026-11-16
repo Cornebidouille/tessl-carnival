@@ -66,8 +66,7 @@ src/
   opening-hours.test.ts
   booth-scores.ts         the scores a booth card shows
   booth-scores.test.ts
-  share.ts                the link and text for sharing the carnival
-  share.test.ts
+  share.ts                the link to the original carnival, for building your own
   midway/                 the walkable midway map
     world.ts              layout, movement and pathfinding (plain functions)
     world.test.ts
