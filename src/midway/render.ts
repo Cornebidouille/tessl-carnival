@@ -1399,7 +1399,7 @@ function elf(
 
 /**
  * Santa, by the gate: bigger than an elf, in a red suit with white trim, a black
- * belt and a white beard, slowly waving one arm.
+ * belt and a white beard, slowly waving both arms.
  */
 function santa(ctx: Ctx, prop: Prop, t: number) {
   const [x, y] = at(prop.x + 0.5, prop.y + 0.5);
@@ -1465,21 +1465,13 @@ function santa(ctx: Ctx, prop: Prop, t: number) {
     ],
     palette.gold,
   );
-  // One arm rests at his side; the other waves slowly overhead.
-  stroke(
-    ctx,
-    [
-      [-5, -16],
-      [-6.2, -10],
-    ],
-    palette.red,
-    2.6,
-  );
-  oval(ctx, -6.2, -9.6, 1.3, 1.3, palette.white);
+  // Both arms wave slowly overhead, mirroring each other.
   const wave = Math.sin(t * 2) * 0.45;
-  const hand: Pt = [5 + Math.cos(-1.1 + wave) * 7, -16 + Math.sin(-1.1 + wave) * 7];
-  stroke(ctx, [[5, -16], hand], palette.red, 2.6);
-  oval(ctx, hand[0], hand[1], 1.4, 1.4, palette.white);
+  for (const side of [-1, 1]) {
+    const hand: Pt = [side * (5 + Math.cos(-1.1 + wave) * 7), -16 + Math.sin(-1.1 + wave) * 7];
+    stroke(ctx, [[side * 5, -16], hand], palette.red, 2.6);
+    oval(ctx, hand[0], hand[1], 1.4, 1.4, palette.white);
+  }
   // His face, and a white beard over the chin and down onto the coat.
   oval(ctx, 0, -21, 4, 4, palette.skins[0]);
   oval(ctx, -1.4, -21.6, 0.6, 0.7, palette.ink);
